@@ -1,0 +1,5 @@
+data/
+*.tgz
+user-data
+meta-data
+pid.lock
