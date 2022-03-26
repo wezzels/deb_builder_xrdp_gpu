@@ -35,8 +35,13 @@ This adds some debian tar files to make a couple packages.
 ## This will run a full build and create and download the correct files. After will run the incr version. Incr versions startup at about 1/4th the time it takes a full to build.      
 
 `time ./run_full_vm_process_build.sh`
+
 `time ./run_incr_vm_process_build.sh`
+
 `time ./run_full_vm_AlmaLinux.sh`
+
 `time ./run_incr_vm_AlmaLinux.sh`
+
 `time ./run_full_vm_Ubuntu.sh`
+
 `time ./run_incr_vm_Ubuntu.sh`
