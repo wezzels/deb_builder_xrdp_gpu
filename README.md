@@ -1,6 +1,5 @@
 # Howto setup a vm builder using as minimal software as possible.  
         
-
 prep_system.sh -- cofigure user and has the tar files for the build
 
 `Usage: sudo ./prep_system.sh -u $username 
@@ -20,7 +19,7 @@ make_xrdp_xorgxrdp_deb_packages.sh
 
   Install ubuntu 20.04 on a physical machine make sure user is in KVM group. Install qemu-kvm. 
 
-`git clone `
+`git clone https://github.com/wezzels/deb_builder_xrdp_gpu.git`
 
 run to following:
 
