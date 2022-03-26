@@ -7,17 +7,25 @@ DATA_DIR="./data/focal"
 mkdir -p $DATA_DIR
 
 if getent group kvm | grep -q "\b${USER}\b"; then
-    echo "User is in the KVM group continuing."
-    
+  echo "User is in the KVM group continuing."
 else
-    echo "User not found in KVM.  Add the User to KVM and restart this session."
-    exit 1
+  echo "User not found in KVM.  Add the User to KVM and restart this session."
+  exit 1
 fi
 
+MY_KEY="/home/${USER}/.ssh/id_ed25519"
+if [ ! -f "$MY_KEY" ]; then
+  ssh-keygen -b 4096 -t ed25519 -f $MY_KEY -q -N ""
+fi
+
+MY_OPTS_SCP="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P 2333"
+MY_OPTS_SSH="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2333"
+
+#Cleanup old files if they exsist.
 rm -f user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
 
-if [ ! -f "./data/focal/${IMG}" ]; then
-  wget -O ./data/focal/${IMG} "https://cloud-images.ubuntu.com/releases/focal/release/${IMG}"	
+if [ ! -f "${DATA_DIR}/${IMG}" ]; then
+  wget -O "${DATA_DIR}/${IMG}" "https://cloud-images.ubuntu.com/releases/focal/release/${IMG}"	
 fi
 
 
@@ -138,9 +146,6 @@ qemu-system-x86_64 \
 echo "Not sure how long to wait. Waiting around 20 seconds."
 sleep 5
 echo "Starting Run. Task to be done."
-MY_KEY="/home/${USER}/.ssh/id_ed25519"
-MY_OPTS_SCP="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P 2333"
-MY_OPTS_SSH="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2333"
 
 until [ `ssh -q -i $MY_KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2333 ${USER}@black exit ; echo $?` ]
 do
