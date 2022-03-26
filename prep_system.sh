@@ -1,39 +1,33 @@
 #!/bin/bash
-if [ "$EUID" -ne 0 ]
-  then echo "Must be run as user and sudo be used. Or the SET_USER needs to be set to the correct user that needs access to the tap0"
-  exit
-fi
 #Must be run as user and sudo be used. Or the SET_USER needs to be set to the correct user that needs access to the tap0
-while getopts u: flag
+while getopts ":u:f:" flag
 do
     case "${flag}" in
         u) SET_USER=${OPTARG};;
-        f) create_debian_files;;
+        f) SET_FILES=${OPTARG};;
     esac
 done
 
 if [ ! -z "$SET_USER" ]
 then
+
+  if [ "$EUID" -ne 0 ]
+    then echo "Need to run as root. when using the -u <uid>."
+    exit
+  fi
   apt-get install -y uml-utilities
   tunctl -t tap0 -u ${SET_USER}
   exit
 fi
-echo "Error: no user selected."
-echo "USAGE: prep_system.sh -u username"
-echo "       prep_system.sh -f"
 
-exit
-function create_debian_files() {
-
-if [ "$EUID" -eq 0 ]
-  then echo "Not able to run root or with the -u flag."
-  exit
-fi
-#Must be run as user and sudo be used. Or the SET_USER needs to be set to the correct user that needs access to the tap0
-
-
+if [ "$SET_FILES" == "yes" ]
+then
+  if [ "$EUID" -eq 0 ]
+    then echo "-f yes cannot run as root. Just \"./prep_system.sh -f yes\""
+    exit
+  fi
 #Backup of the files that are binary
-cat <EOB>files.b64
+cat <<EOB> files.b64
 H4sICCA/PmICA2ZpbGVzLnRhcgDt2kVsHUC4JWgzM7PjmNnXzI6ZmZmZmX3NGDMnZoyZ7ZiZmZmZ
 meH2e92bVi+mZzHzpG7lq5L+I5VUUi2PVF6OLpZeLmZOhmbmJtbGDoZm1i6GDuaeTG6WPmD/X2H5
 D5yc7P85AVwcLP/z/E8cLOxsYAB2VgAXO4CTA8AKxgJg5+TiAPvGAvZfwN3Vzdjl2zcwT/P/5wf/
@@ -239,6 +233,13 @@ x7MDEjdaPH0oaj5M9Mg7EfBUsG06ZRiURznT1w2w/lhv/3zZNvfFB50aqwh9tV/ci+FCIohk0mkA
 5yFNM9Os//s+5cr6QoTCbXYGy/v3q+qff/75559//vnnn3/++eeff/75559//vnnn3/++eeff/75
 57/efwMbVvMMAFAAAA==
 EOB
-base64 --decode files.b64 >files.tar.gz
-tar -zxf files.tar.gz
-}
+  base64 --decode files.b64 >files.tar.gz
+  tar -zxf files.tar.gz
+  rm -f files.b64 files.tar.gz
+  exit
+fi
+
+echo "Error: run with sudo or root with -u flag."
+echo "       run as user with -f yes"
+echo "USAGE: sudo prep_system.sh -u username"
+echo "       prep_system.sh -f yes"
