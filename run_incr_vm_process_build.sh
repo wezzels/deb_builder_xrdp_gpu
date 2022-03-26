@@ -38,7 +38,7 @@ qemu-system-x86_64 \
   -pidfile ./pid.lock
 
 echo "Not sure how long to wait. Waiting around 20 seconds."
-sleep 5
+sleep 15
 echo "Starting Run. Task to be done."
 MY_KEY="/home/${USER}/.ssh/id_ed25519"
 MY_OPTS_SCP="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P 2333"

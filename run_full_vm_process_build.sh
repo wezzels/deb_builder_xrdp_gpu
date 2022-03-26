@@ -144,7 +144,7 @@ qemu-system-x86_64 \
 
   #-net tap,ifname=tap0,script=no,downscript=no -net nic,model=virtio,macaddr=fa:34:f3:3f:d2:f4 \
 echo "Not sure how long to wait. Waiting around 20 seconds."
-sleep 5
+sleep 15
 echo "Starting Run. Task to be done."
 
 until [ `ssh -q -i $MY_KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2333 ${USER}@black exit ; echo $?` ]
