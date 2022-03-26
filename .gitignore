@@ -1,5 +1,8 @@
 data/
 *.tgz
+*.img
+*.qcow2
+*.vmdk
 user-data
 meta-data
 pid.lock

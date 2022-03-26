@@ -1,12 +1,12 @@
 #!/bin/bash
 HOST=`hostname`
-IMG_URL=https://repo.almalinux.org/almalinux/8/cloud/x86_64/images/AlmaLinux-8-GenericCloud-latest.x86_64.qcow2
-IMG=AlmaLinux-8-GenericCloud-latest.x86_64.img
-INCR_IMG=incr_AlmaLinux-8-GenericCloud-latest.x86_64.img
+IMG_URL=https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img
+IMG=ubuntu-20.04-server-cloudimg-amd64.img
+INCR_IMG=incr_ubuntu-20.04-server-cloudimg-amd64.img
 USER_DATA=user-data
-DATA_DIR="./data/almalinux8"
-SSH_PORT=2334
-RUN_SCRIPT="alma_setup.sh"
+DATA_DIR="./data/focal"
+SSH_PORT=2333
+RUN_SCRIPT="ubuntu_setup.sh"
 
 mkdir -p $DATA_DIR
 
@@ -54,6 +54,8 @@ users:
     lock_passwd: false
 package_upgrade: true
 package_update: true
+packages:
+  - git 
 runcmd:
   - [ touch, /tmp/continue.txt ]
 #    - [ chmod, +x ,/tmp]
@@ -69,7 +71,7 @@ qemu-system-x86_64 \
   -smp 2 \
   -vga virtio \
   -net nic,model=virtio -net tap,ifname=tap0,script=no,downscript=no \
-  -name "AlmaLinux Server" \
+  -name "Ubuntu Server" \
   -vnc :2 \
   -net user,hostfwd=tcp::${SSH_PORT}-:22 \
   -net nic \
@@ -85,8 +87,10 @@ do
 	sleep 1
 done
 echo "Yeah! ssh is working. Moving on."
-scp $MY_OPTS_SCP ${RUN_SCRIPT} ${USER}@${HOST}:.
-ssh $MY_OPTS_SSH ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCTIPT}
+echo "host=${HOST}"
+echo "run_script=${RUN_SCRIPT}"
+scp $MY_OPTS_SCP ${RUN_SCRIPT}  ${USER}@${HOST}:${RUN_SCRIPT}
+ssh $MY_OPTS_SSH ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCRIPT}
 #scp $MY_OPTS_SCP *_debian_dir_new.tgz ${USER}@${HOST}:/tmp/
 ssh $MY_OPTS_SSH ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
 #scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.deb ./data/
@@ -95,7 +99,7 @@ ssh $MY_OPTS_SSH ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
 ssh $MY_OPTS_SSH ${USER}@${HOST} sudo poweroff
 # removed so no output: -serial mon:stdio \
 
-cp ${IMG} ${DATA_DIR}/incr_${IMG}
+cp ${IMG} ${DATA_DIR}/${INCR_IMG}
 kill $( cat pid.lock )
 rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data pid.lock
 exit

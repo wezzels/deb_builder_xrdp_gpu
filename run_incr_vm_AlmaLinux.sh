@@ -48,9 +48,9 @@ MY_KEY="/home/${USER}/.ssh/id_ed25519"
 MY_OPTS_SCP="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT}"
 MY_OPTS_SSH="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}"
 
-until [ `ssh -q -i $MY_KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} exit ; echo $?` ]
+until [ "`ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST}  ls /tmp | grep continue`" = "continue.txt" ]
 do
-	echo "Still going."
+	ssh $MY_OPTS_SSH ${USER}@${HOST} touch /tmp/continue.txt
 	sleep 1
 done
 echo "Yeah! ssh is working. Moving on."
@@ -64,8 +64,8 @@ ssh $MY_OPTS_SSH ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
 
 ssh $MY_OPTS_SSH ${USER}@${HOST} sudo poweroff
 # removed so no output: -serial mon:stdio \
-
-rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data
+kill $( cat pid.lock )
+rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data pid.lock
 exit
 #NOTES:
 #copy a file from running vm.
