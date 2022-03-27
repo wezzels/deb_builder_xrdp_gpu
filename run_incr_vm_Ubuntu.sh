@@ -4,9 +4,10 @@ IMG_URL=https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-serv
 IMG=ubuntu-20.04-server-cloudimg-amd64.img
 INCR_IMG=incr_ubuntu-20.04-server-cloudimg-amd64.img
 USER_DATA=user-data
-DATA_DIR="./data/focal"
-SSH_PORT=2333
+DATA_DIR="./data/focal_OS"
+SSH_PORT=2334
 RUN_SCRIPT="ubuntu_setup.sh"
+FULL_RUN_SHA="full_run_sha.txt"
 
 mkdir -p ${DATA_DIR}
 
@@ -23,8 +24,13 @@ if [ ! -f "${DATA_DIR}/${INCR_IMG}" ]; then
   exit
 fi
 
+# get incr and show sha512 hashs of copy and original.
 if [ ! -f "${IMG}" ]; then
-  cp ${DATA_DIR}/${INCR_IMG} ${IMG}
+  rsync -av ${DATA_DIR}/${INCR_IMG} ${IMG}
+  echo "SHA validation"
+  cat ${DATA_DIR}/${FULL_RUN_SHA}
+  sha512sum -b ${DATA_DIR}/${INCR_IMG}
+  sha512sum -b ${IMG}
 fi
 
 qemu-system-x86_64 \
@@ -39,19 +45,25 @@ qemu-system-x86_64 \
   -display none \
   -net nic \
   -daemonize \
-  -pidfile ./pid.lock
+  -pidfile ./pid.${SSH_PORT}
 
 echo "Not sure how long to wait. Waiting around 20 seconds."
 sleep 15
-echo "Starting Run. Task to be done."
+echo "Starting Run. Task to be done. Can take several minutes to update and configure system."
+echo " Can ignore \" kex_exchange_identification: <msg> \" Error means system not up yet."
+
 MY_KEY="/home/${USER}/.ssh/id_ed25519"
 MY_OPTS_SCP="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT}"
 MY_OPTS_SSH="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}"
 
+date1=`date +%s`
+date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
 until [ "`ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST}  ls /tmp | grep continue`" = "continue.txt" ]
 do
-	ssh $MY_OPTS_SSH ${USER}@${HOST} touch /tmp/continue.txt
-	sleep 1
+        echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r"
+        date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
+        sleep 1
+	ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST} sudo touch /tmp/continue.txt
 done
 echo "Yeah! ssh is working. Moving on."
 scp $MY_OPTS_SCP ${RUN_SCRIPT}  ${USER}@${HOST}:.
@@ -63,9 +75,16 @@ ssh $MY_OPTS_SSH ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
 #scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.tgz ./data/
 
 ssh $MY_OPTS_SSH ${USER}@${HOST} sudo poweroff
-# removed so no output: -serial mon:stdio \
 kill $( cat pid.lock )
+echo "Wait time was: ${date2}"
+echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"
 rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data pid.lock
+
+echo "-----" >> ./run_times.txt
+echo "$0 , ${RUN_SCRIPT}" >> ./run_times.txt
+echo "Wait time was: ${date2}" >> ./run_times.txt
+echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)" >> ./run_times.txt
+
 exit
 #NOTES:
 #copy a file from running vm.

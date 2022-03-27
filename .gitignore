@@ -5,4 +5,5 @@ data/
 *.vmdk
 user-data
 meta-data
-pid.lock
+pid.*
+run_times.txt

@@ -5,6 +5,8 @@ INCR_IMG=incr_ubuntu-20.04-server-cloudimg-amd64.img
 USER_DATA=user-data
 DATA_DIR="./data/focal"
 SSH_PORT=2331
+RUN_SCRIPT="make_xrdp_xorgxrdp_deb_packages.sh"
+FULL_RUN_SHA="full_run_sha.txt"
 
 mkdir -p $DATA_DIR
 
@@ -142,31 +144,53 @@ qemu-system-x86_64 \
   -net user,hostfwd=tcp::${SSH_PORT}-:22 \
   -net nic \
   -daemonize \
-  -pidfile ./pid.lock
+  -pidfile ./pid.${SSH_PORT}
 
   #-net tap,ifname=tap0,script=no,downscript=no -net nic,model=virtio,macaddr=fa:34:f3:3f:d2:f4 \
 echo "Not sure how long to wait. Waiting around 20 seconds."
 sleep 15
-echo "Starting Run. Task to be done."
+echo "Starting Run. Task to be done. Can take several minutes to update and configure system."
+echo " Can ignore \" kex_exchange_identification: <msg> \" Error means system not up yet."
 
+date1=`date +%s`
+date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
 until [ "`ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST}  ls /tmp | grep continue`" = "continue.txt" ]
 do
-	sleep 1
+        echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r"
+        date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
+        sleep 1
 done
+
 echo "Yeah! ssh is working. Moving on."
-scp $MY_OPTS_SCP make_xrdp_xorgxrdp_deb_packages.sh  ${USER}@${HOST}:.
-ssh $MY_OPTS_SSH ${USER}@${HOST} chmod +x /home/${USER}/make_xrdp_xorgxrdp_deb_packages.sh
+scp $MY_OPTS_SCP ${RUN_SCRIPT}  ${USER}@${HOST}:.
+ssh $MY_OPTS_SSH ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCRIPT}
 scp $MY_OPTS_SCP *_debian_dir_new.tgz ${USER}@${HOST}:/tmp/
-ssh $MY_OPTS_SSH ${USER}@${HOST} sudo bash /home/${USER}/make_xrdp_xorgxrdp_deb_packages.sh
+ssh $MY_OPTS_SSH ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
 scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.deb ./data/
 #scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.tgz ./data/
 
-ssh $MY_OPTS_SSH ${USER}@${HOST} sudo poweroff
-# removed so no output: -serial mon:stdio \
+# Basic shutdown process.
+ssh $MY_OPTS_SSH ${USER}@${HOST} sudo shutdown -h now
+timeout 30 wait $( cat pid.${SSH_PORT} )
+kill $( cat pid.${SSH_PORT} )
+sync
+sync
 
-cp ubuntu-20.04-server-cloudimg-amd64.img ${DATA_DIR}/incr_ubuntu-20.04-server-cloudimg-amd64.img
-kill $( cat pid.lock )
+#Copy image to incr and make sha512 hash.
+rsync -av ${IMG} ${DATA_DIR}/incr_${IMG}
+sha512sum -b ${DATA_DIR}/incr_${IMG}
+echo "`sha512sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
+
+echo "Wait time was: ${date2}"
+echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"
+
 rm -f ${DATA_DIR}/cloud.img meta-data ubuntu-20.04-server-cloudimg-amd64.img user-data pid.lock
+
+echo "-----" >> ./run_times.txt
+echo "$0 , ${RUN_SCRIPT}" >> ./run_times.txt
+echo "Wait time was: ${date2}" >> ./run_times.txt
+echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)" >> ./run_times.txt
+
 exit
 #NOTES:
 #copy a file from running vm.

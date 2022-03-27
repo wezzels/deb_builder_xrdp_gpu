@@ -5,10 +5,12 @@ IMG=AlmaLinux-8-GenericCloud-latest.x86_64.img
 INCR_IMG=incr_AlmaLinux-8-GenericCloud-latest.x86_64.img
 USER_DATA=user-data
 DATA_DIR="./data/almalinux8"
-SSH_PORT=2334
+SSH_PORT=2335
 RUN_SCRIPT="alma_setup.sh"
+FULL_RUN_SHA="full_run_sha.txt"
 
 mkdir -p $DATA_DIR
+kill $( ps -ef | grep qemu-system-x86_64 | xargs | cut -d" " -f2 )
 
 if getent group kvm | grep -q "\b${USER}\b"; then
   echo "User is in the KVM group continuing."
@@ -26,12 +28,11 @@ MY_OPTS_SCP="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKno
 MY_OPTS_SSH="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}"
 
 #Cleanup old files if they exsist.
-rm -f user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
+rm -f pid.23* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
 
 if [ ! -f "${DATA_DIR}/${IMG}" ]; then
   wget -O "${DATA_DIR}/${IMG}" "${IMG_URL}"	
 fi
-
 
 if [ ! -f "${IMG}" ]; then
   cp ${DATA_DIR}/${IMG} ${IMG}
@@ -52,8 +53,8 @@ users:
     ssh-authorized-keys:
       - `cat /home/${USER}/.ssh/id_ed25519.pub`
     lock_passwd: false
-package_upgrade: true
-package_update: true
+#package_upgrade: true
+#package_update: true
 runcmd:
   - [ touch, /tmp/continue.txt ]
 #    - [ chmod, +x ,/tmp]
@@ -74,17 +75,23 @@ qemu-system-x86_64 \
   -net user,hostfwd=tcp::${SSH_PORT}-:22 \
   -net nic \
   -daemonize \
-  -pidfile ./pid.lock
+  -pidfile ./pid.${SSH_PORT}
 
 echo "Not sure how long to wait. Waiting around 20 seconds."
 sleep 15
-echo "Starting Run. Task to be done."
+echo "Starting Run. Task to be done. Can take several minutes to update and configure system."
+echo " Can ignore \" kex_exchange_identification: <msg> \" Error means system not up yet."
 
+date1=`date +%s`
+date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
 until [ "`ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST}  ls /tmp | grep continue`" = "continue.txt" ]
 do
-	sleep 1
+        echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r"
+        date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
+        sleep 1
 done
-echo "Yeah! ssh is working. Moving on."
+
+echo "--- ssh is working. Starting ${RUN_SCRIPT}."
 scp $MY_OPTS_SCP ${RUN_SCRIPT} ${USER}@${HOST}:.
 ssh $MY_OPTS_SSH ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCTIPT}
 #scp $MY_OPTS_SCP *_debian_dir_new.tgz ${USER}@${HOST}:/tmp/
@@ -92,12 +99,26 @@ ssh $MY_OPTS_SSH ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
 #scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.deb ./data/
 #scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.tgz ./data/
 
-ssh $MY_OPTS_SSH ${USER}@${HOST} sudo poweroff
-# removed so no output: -serial mon:stdio \
+#ssh $MY_OPTS_SSH ${USER}@${HOST} sudo reboot
+ssh $MY_OPTS_SSH ${USER}@${HOST} sudo shutdown -h now
+timeout 30 wait $( cat pid.${SSH_PORT} )
+kill $( cat pid.${SSH_PORT} )
+sync
+sync
+rsync -av ${IMG} ${DATA_DIR}/incr_${IMG}
 
-cp ${IMG} ${DATA_DIR}/incr_${IMG}
-kill $( cat pid.lock )
-rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data pid.lock
+sha512sum -b ${DATA_DIR}/incr_${IMG}
+echo "`sha512sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
+
+echo "Wait time was: ${date2}"
+echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"
+rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data pid.${SSH_PORT}
+
+echo "-----" >> ./run_times.txt
+echo "$0 , ${RUN_SCRIPT}" >> ./run_times.txt
+echo "Wait time was: ${date2}" >> ./run_times.txt
+echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)" >> ./run_times.txt
+
 exit
 #NOTES:
 #copy a file from running vm.
