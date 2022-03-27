@@ -33,11 +33,11 @@ This adds some debian tar files to make a couple packages.
 
 ## This will run a full build and create and download the correct files. After will run the incr version. Incr versions startup at about 1/4th the time it takes a full to build.      
 #Enable the user to be able to use a tap0 network interface without root.  Needs to be done after a reboot.
-'''
+```
 git clone https://github.com/wezzels/deb_builder_xrdp_gpu.git
 sudo prep_system -u <user>
 ./run_all.sh
-'''
+```
 resulting times will be in run_times.txt
 ```
 ---- Start ----
