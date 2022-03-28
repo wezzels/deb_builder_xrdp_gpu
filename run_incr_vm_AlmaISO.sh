@@ -13,6 +13,7 @@ RUN_SCRIPT="alma_setup_ISO.sh"
 FULL_RUN_SHA="full_run_sha.txt"
 #This is the location the repository is in.  Git clone the ComplianceAsCode repo and change.
 KS="../autoinstall/hardening/ComplianceAsCode-content-hardening/products/rhel8/kickstart/ssg-rhel8-stig-ks.cfg"
+KS="../autoinstall/AlmaLinux-LUKS-ks.cfg"
 mkdir -p $DATA_DIR
 
 if getent group kvm | grep -q "\b${USER}\b"; then
@@ -46,11 +47,13 @@ qemu-system-x86_64 \
   -net nic,model=virtio -net tap,ifname=tap0,script=no,downscript=no \
   -name "Ubuntu Server" \
   -net user,hostfwd=tcp::${SSH_PORT}-:22 \
-  -display none \
   -net nic \
+  -vnc :2 \
   -daemonize \
   -pidfile ./pid.${SSH_PORT}
 
+
+  #-display none \
 MY_KEY="/home/${USER}/.ssh/id_ed25519"
 MY_OPTS_SCP="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT}"
 MY_OPTS_SSH="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}"
@@ -93,6 +96,9 @@ echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)" >> ./r
 rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data pid.lock
 exit
 #NOTES:
+#Way to complex for this installment. 
+https://pki-tutorial.readthedocs.io/en/latest/simple/
+-object tls-creds-x509,id=tls0,dir=/etc/pki/qemu,endpoint=server,verify-peer=on   -vnc :1,tls-creds=tls0
 #copy a file from running vm.
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${USER}@${HOST}:make* .
 #copy file to running system.

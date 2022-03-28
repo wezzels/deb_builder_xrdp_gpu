@@ -12,7 +12,9 @@ SSH_PORT=2337
 RUN_SCRIPT="alma_setup_ISO.sh"
 FULL_RUN_SHA="full_run_sha.txt"
 #This is the location the repository is in.  Git clone the ComplianceAsCode repo and change. 
-KS="../autoinstall/hardening/ComplianceAsCode-content-hardening/products/rhel8/kickstart/ssg-rhel8-stig-ks.cfg"
+#  KS="../autoinstall/hardening/ComplianceAsCode-content-hardening/products/rhel8/kickstart/ssg-rhel8-stig-ks.cfg"
+#  KS="../autoinstall/AlmaLinux-LUKS-ks.cfg"
+KS="../autoinstall/AlmaLinux-tiny-ks.cfg"
 mkdir -p $DATA_DIR
 
 if getent group kvm | grep -q "\b${USER}\b"; then

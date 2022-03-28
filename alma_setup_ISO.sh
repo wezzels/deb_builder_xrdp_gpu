@@ -78,6 +78,11 @@ echo "All done."
 exit
 # 	NOTES and ideas pulled from various places.
 
+#Different ISO build. 
+xorriso -as mkisofs -o /isos/centOS8.iso -V "CentOS-8-1-1911-x86_64-dvd" -c isolinux/boot.cat -b isolinux/isolinux.bin -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e images/efiboot.img -no-emul-boot -R -J .
+https://www.golinuxcloud.com/create-custom-iso-rhel-centos-8/
+
+
 #Media
 #	https://repo.almalinux.org/almalinux/8/isos/x86_64/AlmaLinux-8.5-x86_64-boot.iso        #700M
 #	https://repo.almalinux.org/almalinux/8/isos/x86_64/AlmaLinux-8.5-x86_64-dvd.iso         #10G
