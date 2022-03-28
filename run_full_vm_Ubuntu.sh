@@ -112,8 +112,8 @@ sync
 
 #Copy image to incr and make sha512 hash.
 rsync -av ${IMG} ${DATA_DIR}/incr_${IMG}
-sha512sum -b ${DATA_DIR}/incr_${IMG}
-echo "`sha512sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
+sha256sum -b ${DATA_DIR}/incr_${IMG}
+echo "`sha256sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
 
 echo "Wait time was: ${date2}"
 echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"

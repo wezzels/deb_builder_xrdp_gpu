@@ -1,15 +1,24 @@
 #!/bin/bash
 HOST=`hostname`
-IMG=ubuntu-20.04-server-cloudimg-amd64.img
-INCR_IMG=incr_ubuntu-20.04-server-cloudimg-amd64.img
+
+ISO="custom-AlmaLinux-8.5.iso"
+
+
+IMG_URL=https://repo.almalinux.org/almalinux/8/cloud/x86_64/images/AlmaLinux-8-GenericCloud-latest.x86_64.qcow2
+IMG=AlmaLinux-8-GenericCloud-latest.x86_64.img
+TEST_IMG=test_AlmaLinux-8-GenericCloud-latest.x86_64.img
 USER_DATA=user-data
-DATA_DIR="./data/focal"
-SSH_PORT=2331
-RUN_SCRIPT="make_xrdp_xorgxrdp_deb_packages.sh"
+DATA_DIR="./data/almalinux8iso"
+SSH_PORT=2339
+RUN_SCRIPT="tbd.sh"
 FULL_RUN_SHA="full_run_sha.txt"
 
-mkdir -p $DATA_DIR
+mkdir -p ${DATA_DIR}
 
+#Kill any running vms. 
+kill $( ps -ef | grep qemu-system-x86_64 | xargs | cut -d" " -f2 )
+
+# Verify the user is in the kvm group.
 if getent group kvm | grep -q "\b${USER}\b"; then
   echo "User is in the KVM group continuing."
 else
@@ -17,6 +26,7 @@ else
   exit 1
 fi
 
+#make a working key if not found. 
 MY_KEY="/home/${USER}/.ssh/id_ed25519"
 if [ ! -f "$MY_KEY" ]; then
   ssh-keygen -b 4096 -t ed25519 -f $MY_KEY -q -N ""
@@ -26,16 +36,24 @@ MY_OPTS_SCP="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKno
 MY_OPTS_SSH="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}"
 
 #Cleanup old files if they exsist.
-rm -f user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
+rm -f pid.* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
 
+#Make a blank image if needed. 
 if [ ! -f "${DATA_DIR}/${IMG}" ]; then
-  wget -O "${DATA_DIR}/${IMG}" "https://cloud-images.ubuntu.com/releases/focal/release/${IMG}"	
+  qemu-img create -f qcow2 ${DATA_DIR}/${IMG} 1G
 fi
 
+# Move ISO image into directory for testing. 
+if [ ! -f "${ISO}" ]; then
+  rsync -av data/${ISO} ${DATA_DIR}/${ISO}
+else
+  echo "Error: Must run ISO builder first."
+  exit
+fi
 
 if [ ! -f "${IMG}" ]; then
   cp ${DATA_DIR}/${IMG} ${IMG}
-  qemu-img resize "${IMG}" +10G
+  qemu-img resize "${IMG}" +20G
 fi
 
 if [ ! -f "${USER_DATA}" ]; then
@@ -52,78 +70,8 @@ users:
     ssh-authorized-keys:
       - `cat /home/${USER}/.ssh/id_ed25519.pub`
     lock_passwd: false
-package_upgrade: true
-package_update: true
-packages:
-  - dpkg-dev 
-  - devscripts
-  - build-essential 
-  - autoconf 
-  - automake
-  - autotools-dev
-  - dh-make 
-  - debhelper 
-  - devscripts 
-  - fakeroot
-  - xutils 
-  - x11-xserver-utils 
-  - lintian 
-  - pbuilder
-  - libjpeg-turbo8
-  - build-essential
-  - make 
-  - autoconf 
-  - libtool 
-  - intltool 
-  - pkg-config 
-  - nasm 
-  - xserver-xorg-dev 
-  - libssl-dev 
-  - libpam0g-dev 
-  - libjpeg-dev 
-  - libfuse-dev 
-  - libopus-dev 
-  - libmp3lame-dev 
-  - libxfixes-dev 
-  - libxrandr-dev 
-  - libgbm-dev 
-  - libepoxy-dev 
-  - libegl1-mesa-dev
-  - libcap-dev 
-  - libsndfile-dev 
-  - libsndfile1-dev 
-  - libspeex-dev 
-  - libpulse-dev
-  - libfdk-aac-dev 
-  - pulseaudio
-  - xserver-xorg
-  - check
-  - libperl5.30
-  - libx11-dev
-  - mime-support
-  - nasm
-  - libfakeroot
-  - libmagic-mgc
-  - tzdata
-  - libxcb1
-  - libpam0g-dev
-  - libxrender-dev
-  - libxdmcp6
-  - libxau6
-  - libglib2.0-0
-  - x11proto-dev 
-  - pkg-config
-  - libxfixes-dev
-  - systemd
-  - libx11-6
-  - libmagic1
-  - file
-  - perl-modules-5.30
-  - gawk
-  - libxrandr-dev
-  - libsigsegv2
-  - libssl-dev
-  - libbsd0
+#package_upgrade: true
+#package_update: true
 runcmd:
   - [ touch, /tmp/continue.txt ]
 #    - [ chmod, +x ,/tmp]
@@ -134,19 +82,20 @@ cloud-localds --disk-format qcow2 ${DATA_DIR}/cloud.img "${USER_DATA}"
 qemu-system-x86_64 \
   -drive file="${IMG}",if=virtio \
   -drive file=${DATA_DIR}/cloud.img,if=virtio \
+  -boot d \
+  -cdrom ${DATA_DIR}/${ISO} \
   -m 2G \
   -enable-kvm \
   -smp 2 \
   -vga virtio \
   -net nic,model=virtio -net tap,ifname=tap0,script=no,downscript=no \
-  -name "Ubuntu Server" \
+  -name "AlmaLinux Server" \
   -vnc :2 \
   -net user,hostfwd=tcp::${SSH_PORT}-:22 \
   -net nic \
   -daemonize \
   -pidfile ./pid.${SSH_PORT}
 
-  #-net tap,ifname=tap0,script=no,downscript=no -net nic,model=virtio,macaddr=fa:34:f3:3f:d2:f4 \
 echo "Not sure how long to wait. Waiting around 20 seconds."
 sleep 15
 echo "Starting Run. Task to be done. Can take several minutes to update and configure system."
@@ -161,30 +110,28 @@ do
         sleep 1
 done
 
-echo "Yeah! ssh is working. Moving on."
-scp $MY_OPTS_SCP ${RUN_SCRIPT}  ${USER}@${HOST}:.
-ssh $MY_OPTS_SSH ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCRIPT}
-scp $MY_OPTS_SCP *_debian_dir_new.tgz ${USER}@${HOST}:/tmp/
+echo "--- ssh is working. Starting ${RUN_SCRIPT}."
+scp $MY_OPTS_SCP ${RUN_SCRIPT} ${USER}@${HOST}:.
+ssh $MY_OPTS_SSH ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCTIPT}
+#scp $MY_OPTS_SCP *_debian_dir_new.tgz ${USER}@${HOST}:/tmp/
 ssh $MY_OPTS_SSH ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
-scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.deb ./data/
+#scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.deb ./data/
 #scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.tgz ./data/
 
-# Basic shutdown process.
+#ssh $MY_OPTS_SSH ${USER}@${HOST} sudo reboot
 ssh $MY_OPTS_SSH ${USER}@${HOST} sudo shutdown -h now
 timeout 30 wait $( cat pid.${SSH_PORT} )
 kill $( cat pid.${SSH_PORT} )
 sync
 sync
-
-#Copy image to incr and make sha512 hash.
 rsync -av ${IMG} ${DATA_DIR}/incr_${IMG}
+
 sha256sum -b ${DATA_DIR}/incr_${IMG}
 echo "`sha256sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
 
 echo "Wait time was: ${date2}"
 echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"
-
-rm -f ${DATA_DIR}/cloud.img meta-data ubuntu-20.04-server-cloudimg-amd64.img user-data pid.lock
+rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data pid.${SSH_PORT}
 
 echo "-----" >> ./run_times.txt
 echo "$0 , ${RUN_SCRIPT}" >> ./run_times.txt
@@ -193,6 +140,11 @@ echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)" >> ./r
 
 exit
 #NOTES:
+#Booting in EFI mode Extra software might need to be installed.
+qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd -cdrom netboot.xyz.iso -m 4G
+#Might make a better small image.
+virt-sparsify /path/to/source.qcow2 --compress /path/to/output.qcow2
+
 #copy a file from running vm.
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${USER}@${HOST}:make* .
 #copy file to running system.

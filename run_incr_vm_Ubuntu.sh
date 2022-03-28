@@ -29,8 +29,8 @@ if [ ! -f "${IMG}" ]; then
   rsync -av ${DATA_DIR}/${INCR_IMG} ${IMG}
   echo "SHA validation"
   cat ${DATA_DIR}/${FULL_RUN_SHA}
-  sha512sum -b ${DATA_DIR}/${INCR_IMG}
-  sha512sum -b ${IMG}
+  sha256sum -b ${DATA_DIR}/${INCR_IMG}
+  sha256sum -b ${IMG}
 fi
 
 qemu-system-x86_64 \

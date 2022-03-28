@@ -1,13 +1,20 @@
 #!/bin/bash
-HOST=`hostname`
-IMG=ubuntu-20.04-server-cloudimg-amd64.img
-INCR_IMG=incr_ubuntu-20.04-server-cloudimg-amd64.img
-USER_DATA=user-data
-DATA_DIR="./data/focal"
-SSH_PORT=2331
-RUN_SCRIPT="make_xrdp_xorgxrdp_deb_packages.sh"
-FULL_RUN_SHA="full_run_sha.txt"
+# Makes a custom ISO image.
+# See alma_setup_ISO.sh
 
+HOST=`hostname`
+IMG_URL=https://repo.almalinux.org/almalinux/8/cloud/x86_64/images/AlmaLinux-8-GenericCloud-latest.x86_64.qcow2
+IMG=AlmaLinux-8-GenericCloud-latest.x86_64.img
+INCR_IMG=incr_AlmaLinux-8-GenericCloud-latest.x86_64.img
+USER_DATA=user-data
+DATA_DIR="./data/almaISO8_test"
+SSH_PORT=2337
+RUN_SCRIPT="almalinux_build_ISO.sh"
+FULL_RUN_SHA="full_run_sha.txt"
+#This is the location the repository is in.  Git clone the ComplianceAsCode repo and change. 
+#  KS="../autoinstall/hardening/ComplianceAsCode-content-hardening/products/rhel8/kickstart/ssg-rhel8-stig-ks.cfg"
+#  KS="../autoinstall/AlmaLinux-LUKS-ks.cfg"
+KS="../autoinstall/AlmaLinux-tiny-ks.cfg"
 mkdir -p $DATA_DIR
 
 if getent group kvm | grep -q "\b${USER}\b"; then
@@ -29,13 +36,13 @@ MY_OPTS_SSH="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKno
 rm -f user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
 
 if [ ! -f "${DATA_DIR}/${IMG}" ]; then
-  wget -O "${DATA_DIR}/${IMG}" "https://cloud-images.ubuntu.com/releases/focal/release/${IMG}"	
+  wget -O "${DATA_DIR}/${IMG}" "${IMG_URL}"	
 fi
 
 
 if [ ! -f "${IMG}" ]; then
   cp ${DATA_DIR}/${IMG} ${IMG}
-  qemu-img resize "${IMG}" +10G
+  qemu-img resize "${IMG}" +50G
 fi
 
 if [ ! -f "${USER_DATA}" ]; then
@@ -54,76 +61,6 @@ users:
     lock_passwd: false
 package_upgrade: true
 package_update: true
-packages:
-  - dpkg-dev 
-  - devscripts
-  - build-essential 
-  - autoconf 
-  - automake
-  - autotools-dev
-  - dh-make 
-  - debhelper 
-  - devscripts 
-  - fakeroot
-  - xutils 
-  - x11-xserver-utils 
-  - lintian 
-  - pbuilder
-  - libjpeg-turbo8
-  - build-essential
-  - make 
-  - autoconf 
-  - libtool 
-  - intltool 
-  - pkg-config 
-  - nasm 
-  - xserver-xorg-dev 
-  - libssl-dev 
-  - libpam0g-dev 
-  - libjpeg-dev 
-  - libfuse-dev 
-  - libopus-dev 
-  - libmp3lame-dev 
-  - libxfixes-dev 
-  - libxrandr-dev 
-  - libgbm-dev 
-  - libepoxy-dev 
-  - libegl1-mesa-dev
-  - libcap-dev 
-  - libsndfile-dev 
-  - libsndfile1-dev 
-  - libspeex-dev 
-  - libpulse-dev
-  - libfdk-aac-dev 
-  - pulseaudio
-  - xserver-xorg
-  - check
-  - libperl5.30
-  - libx11-dev
-  - mime-support
-  - nasm
-  - libfakeroot
-  - libmagic-mgc
-  - tzdata
-  - libxcb1
-  - libpam0g-dev
-  - libxrender-dev
-  - libxdmcp6
-  - libxau6
-  - libglib2.0-0
-  - x11proto-dev 
-  - pkg-config
-  - libxfixes-dev
-  - systemd
-  - libx11-6
-  - libmagic1
-  - file
-  - perl-modules-5.30
-  - gawk
-  - libxrandr-dev
-  - libsigsegv2
-  - libssl-dev
-  - libbsd0
 runcmd:
   - [ touch, /tmp/continue.txt ]
 #    - [ chmod, +x ,/tmp]
@@ -139,14 +76,13 @@ qemu-system-x86_64 \
   -smp 2 \
   -vga virtio \
   -net nic,model=virtio -net tap,ifname=tap0,script=no,downscript=no \
-  -name "Ubuntu Server" \
+  -name "AlmaLinux Server" \
   -vnc :2 \
   -net user,hostfwd=tcp::${SSH_PORT}-:22 \
   -net nic \
   -daemonize \
   -pidfile ./pid.${SSH_PORT}
 
-  #-net tap,ifname=tap0,script=no,downscript=no -net nic,model=virtio,macaddr=fa:34:f3:3f:d2:f4 \
 echo "Not sure how long to wait. Waiting around 20 seconds."
 sleep 15
 echo "Starting Run. Task to be done. Can take several minutes to update and configure system."
@@ -157,16 +93,15 @@ date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
 until [ "`ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST}  ls /tmp | grep continue`" = "continue.txt" ]
 do
         echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r"
-        date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
-        sleep 1
+	date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
+	sleep 1
 done
-
-echo "Yeah! ssh is working. Moving on."
-scp $MY_OPTS_SCP ${RUN_SCRIPT}  ${USER}@${HOST}:.
-ssh $MY_OPTS_SSH ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCRIPT}
-scp $MY_OPTS_SCP *_debian_dir_new.tgz ${USER}@${HOST}:/tmp/
+echo "System mostly up. Moving on."
+scp $MY_OPTS_SCP ${RUN_SCRIPT} ${USER}@${HOST}:.
+ssh $MY_OPTS_SSH ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCTIPT}
+scp $MY_OPTS_SCP ${KS} ${USER}@${HOST}:custom.ks
 ssh $MY_OPTS_SSH ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
-scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.deb ./data/
+scp $MY_OPTS_SCP ${USER}@${HOST}:./data/*.iso ./data/
 #scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.tgz ./data/
 
 # Basic shutdown process.
@@ -183,8 +118,7 @@ echo "`sha256sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
 
 echo "Wait time was: ${date2}"
 echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"
-
-rm -f ${DATA_DIR}/cloud.img meta-data ubuntu-20.04-server-cloudimg-amd64.img user-data pid.lock
+rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data pid.lock
 
 echo "-----" >> ./run_times.txt
 echo "$0 , ${RUN_SCRIPT}" >> ./run_times.txt

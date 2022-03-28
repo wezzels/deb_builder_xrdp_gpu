@@ -1,21 +1,16 @@
 #!/bin/bash
-# Makes a custom ISO image.
-# See alma_setup_ISO.sh
-
 HOST=`hostname`
-IMG_URL=https://repo.almalinux.org/almalinux/8/cloud/x86_64/images/AlmaLinux-8-GenericCloud-latest.x86_64.qcow2
-IMG=AlmaLinux-8-GenericCloud-latest.x86_64.img
-INCR_IMG=incr_AlmaLinux-8-GenericCloud-latest.x86_64.img
+IMG_URL=https://cloud.centos.org/centos/8-stream/x86_64/images/CentOS-Stream-GenericCloud-8-20220125.1.x86_64.qcow2
+IMG=CentOS-Stream-GenericCloud-8-20220125.1.x86_64.img
+INCR_IMG=incr_CentOS-Stream-GenericCloud-8-20220125.1.x86_64.img
 USER_DATA=user-data
-DATA_DIR="./data/almaISO8"
-SSH_PORT=2337
-RUN_SCRIPT="alma_setup_ISO.sh"
+DATA_DIR="./data/centos8stream"
+SSH_PORT=2335
+RUN_SCRIPT="centOS8_setup.sh"
 FULL_RUN_SHA="full_run_sha.txt"
-#This is the location the repository is in.  Git clone the ComplianceAsCode repo and change. 
-#  KS="../autoinstall/hardening/ComplianceAsCode-content-hardening/products/rhel8/kickstart/ssg-rhel8-stig-ks.cfg"
-#  KS="../autoinstall/AlmaLinux-LUKS-ks.cfg"
-KS="../autoinstall/AlmaLinux-tiny-ks.cfg"
+
 mkdir -p $DATA_DIR
+kill $( ps -ef | grep qemu-system-x86_64 | xargs | cut -d" " -f2 )
 
 if getent group kvm | grep -q "\b${USER}\b"; then
   echo "User is in the KVM group continuing."
@@ -33,16 +28,15 @@ MY_OPTS_SCP="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKno
 MY_OPTS_SSH="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}"
 
 #Cleanup old files if they exsist.
-rm -f user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
+rm -f pid.23* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
 
 if [ ! -f "${DATA_DIR}/${IMG}" ]; then
   wget -O "${DATA_DIR}/${IMG}" "${IMG_URL}"	
 fi
 
-
 if [ ! -f "${IMG}" ]; then
   cp ${DATA_DIR}/${IMG} ${IMG}
-  qemu-img resize "${IMG}" +50G
+  qemu-img resize "${IMG}" +10G
 fi
 
 if [ ! -f "${USER_DATA}" ]; then
@@ -59,8 +53,8 @@ users:
     ssh-authorized-keys:
       - `cat /home/${USER}/.ssh/id_ed25519.pub`
     lock_passwd: false
-package_upgrade: true
-package_update: true
+#package_upgrade: true
+#package_update: true
 runcmd:
   - [ touch, /tmp/continue.txt ]
 #    - [ chmod, +x ,/tmp]
@@ -93,32 +87,32 @@ date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
 until [ "`ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST}  ls /tmp | grep continue`" = "continue.txt" ]
 do
         echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r"
-	date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
-	sleep 1
+        date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
+        sleep 1
 done
-echo "System mostly up. Moving on."
+
+echo "--- ssh is working. Starting ${RUN_SCRIPT}."
 scp $MY_OPTS_SCP ${RUN_SCRIPT} ${USER}@${HOST}:.
 ssh $MY_OPTS_SSH ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCTIPT}
-scp $MY_OPTS_SCP ${KS} ${USER}@${HOST}:custom.ks
+#scp $MY_OPTS_SCP *_debian_dir_new.tgz ${USER}@${HOST}:/tmp/
 ssh $MY_OPTS_SSH ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
-scp $MY_OPTS_SCP ${USER}@${HOST}:./data/*.iso ./data/
+#scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.deb ./data/
 #scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.tgz ./data/
 
-# Basic shutdown process.
+#ssh $MY_OPTS_SSH ${USER}@${HOST} sudo reboot
 ssh $MY_OPTS_SSH ${USER}@${HOST} sudo shutdown -h now
 timeout 30 wait $( cat pid.${SSH_PORT} )
 kill $( cat pid.${SSH_PORT} )
 sync
 sync
-
-#Copy image to incr and make sha512 hash.
 rsync -av ${IMG} ${DATA_DIR}/incr_${IMG}
-sha512sum -b ${DATA_DIR}/incr_${IMG}
-echo "`sha512sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
+
+sha256sum -b ${DATA_DIR}/incr_${IMG}
+echo "`sha256sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
 
 echo "Wait time was: ${date2}"
 echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"
-rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data pid.lock
+rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data pid.${SSH_PORT}
 
 echo "-----" >> ./run_times.txt
 echo "$0 , ${RUN_SCRIPT}" >> ./run_times.txt

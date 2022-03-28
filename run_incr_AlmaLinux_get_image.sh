@@ -5,48 +5,43 @@ IMG=AlmaLinux-8-GenericCloud-latest.x86_64.img
 INCR_IMG=incr_AlmaLinux-8-GenericCloud-latest.x86_64.img
 USER_DATA=user-data
 DATA_DIR="./data/almalinux8"
-SSH_PORT=2335
+SSH_PORT=2336
 RUN_SCRIPT="alma_setup.sh"
 FULL_RUN_SHA="full_run_sha.txt"
-
-mkdir -p $DATA_DIR
-kill $( ps -ef | grep qemu-system-x86_64 | xargs | cut -d" " -f2 )
+mkdir -p ${DATA_DIR}
 
 if getent group kvm | grep -q "\b${USER}\b"; then
   echo "User is in the KVM group continuing."
+    
 else
   echo "User not found in KVM.  Add the User to KVM and restart this session."
   exit 1
 fi
 
-MY_KEY="/home/${USER}/.ssh/id_ed25519"
-if [ ! -f "$MY_KEY" ]; then
-  ssh-keygen -b 4096 -t ed25519 -f $MY_KEY -q -N ""
+if [ ! -f "${DATA_DIR}/${INCR_IMG}" ]; then
+  echo "Incr_image is not found. Must run a full first."
+  exit
 fi
 
-MY_OPTS_SCP="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT}"
-MY_OPTS_SSH="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}"
-
-#Cleanup old files if they exsist.
-rm -f pid.23* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
-
-if [ ! -f "${DATA_DIR}/${IMG}" ]; then
-  wget -O "${DATA_DIR}/${IMG}" "${IMG_URL}"	
-fi
-
+# get incr and show sha512 hashs of copy and original.
 if [ ! -f "${IMG}" ]; then
-  cp ${DATA_DIR}/${IMG} ${IMG}
-  qemu-img resize "${IMG}" +10G
+  rsync -av ${DATA_DIR}/${INCR_IMG} ${IMG}
+  echo "SHA validation"
+  cat ${DATA_DIR}/${FULL_RUN_SHA}
+  sha256sum -b ${DATA_DIR}/${INCR_IMG}
+  sha256sum -b ${IMG}
 fi
 
 if [ ! -f "${USER_DATA}" ]; then
-echo "instance-id: $(uuidgen || echo i-softbuild)" > meta-data
-  cat >user-data <<EOF
+	echo "instance-id: $(uuidgen || echo i-softbuild)" > meta-data
+	  cat >user-data <<EOF
 #cloud-config
 users:
   - default
   - name: ${USER}
     groups: sudo
+    password: atomic
+    chpasswd: {expire: False}
     shell: /bin/bash
     sudo: ['ALL=(ALL) NOPASSWD:ALL']
     ssh_import_id: None
@@ -55,32 +50,45 @@ users:
     lock_passwd: false
 #package_upgrade: true
 #package_update: true
+chpasswd:
+  list: |
+    root:password
+  expire: False
 runcmd:
+  - [ echo, "`cat /home/${USER}/.ssh/id_rsa.pub`", |, tee, -a,  /home/${USER}/.ssh/authorized_keys ]
   - [ touch, /tmp/continue.txt ]
 #    - [ chmod, +x ,/tmp]
 EOF
 fi
 
-cloud-localds --disk-format qcow2 ${DATA_DIR}/cloud.img "${USER_DATA}" 
+cloud-localds --disk-format qcow2 ${DATA_DIR}/cloud.img "${USER_DATA}"
+
 qemu-system-x86_64 \
   -drive file="${IMG}",if=virtio \
-  -drive file=${DATA_DIR}/cloud.img,if=virtio \
   -m 2G \
   -enable-kvm \
   -smp 2 \
   -vga virtio \
   -net nic,model=virtio -net tap,ifname=tap0,script=no,downscript=no \
-  -name "AlmaLinux Server" \
-  -vnc :2 \
+  -name "Ubuntu Server" \
   -net user,hostfwd=tcp::${SSH_PORT}-:22 \
+  -vnc :2 \
   -net nic \
   -daemonize \
   -pidfile ./pid.${SSH_PORT}
+
+# Use one for testing. But generally do not have vnc running.
+  #-vnc :2 \
+  #-display none \
 
 echo "Not sure how long to wait. Waiting around 20 seconds."
 sleep 15
 echo "Starting Run. Task to be done. Can take several minutes to update and configure system."
 echo " Can ignore \" kex_exchange_identification: <msg> \" Error means system not up yet."
+
+MY_KEY="/home/${USER}/.ssh/id_ed25519"
+MY_OPTS_SCP="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT}"
+MY_OPTS_SSH="-i $MY_KEY -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}"
 
 date1=`date +%s`
 date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
@@ -89,27 +97,19 @@ do
         echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r"
         date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
         sleep 1
+	ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST} sudo touch /tmp/continue.txt
 done
-
-echo "--- ssh is working. Starting ${RUN_SCRIPT}."
-scp $MY_OPTS_SCP ${RUN_SCRIPT} ${USER}@${HOST}:.
-ssh $MY_OPTS_SSH ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCTIPT}
+echo "Yeah! ssh is working. Moving on."
+scp $MY_OPTS_SCP ${RUN_SCRIPT}  ${USER}@${HOST}:.
+ssh $MY_OPTS_SSH ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCRIPT}
+ssh $MY_OPTS_SSH ${USER}@${HOST} sudo touch /tmp/continue.txt
 #scp $MY_OPTS_SCP *_debian_dir_new.tgz ${USER}@${HOST}:/tmp/
 ssh $MY_OPTS_SSH ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
 #scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.deb ./data/
 #scp $MY_OPTS_SCP ${USER}@${HOST}:/opt/*.tgz ./data/
 
-#ssh $MY_OPTS_SSH ${USER}@${HOST} sudo reboot
-ssh $MY_OPTS_SSH ${USER}@${HOST} sudo shutdown -h now
-timeout 30 wait $( cat pid.${SSH_PORT} )
+ssh $MY_OPTS_SSH ${USER}@${HOST} sudo poweroff
 kill $( cat pid.${SSH_PORT} )
-sync
-sync
-rsync -av ${IMG} ${DATA_DIR}/incr_${IMG}
-
-sha512sum -b ${DATA_DIR}/incr_${IMG}
-echo "`sha512sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
-
 echo "Wait time was: ${date2}"
 echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"
 rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data pid.${SSH_PORT}
