@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install Latest XRDP with XORGXRDP
+# Install Latest 
 ISO_URL=https://repo.almalinux.org/almalinux/8/isos/x86_64/AlmaLinux-8.5-x86_64-boot.iso
 ISO=AlmaLinux-8.5-x86_64-boot.iso
 ISO_NEW=custom-AlmaLinux-8.5.iso
