@@ -182,13 +182,18 @@ done
 echo "--- ssh is working. Put ${RUN_SCRIPT} ${PUT_FILES}."
 scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} bin/${RUN_SCRIPT} ${USER}@${HOST}:.
 
+if [ "${SET_TASK}" = "mkiso" ]; then
+        echo "---Install Kickstart file "
+	scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${KS} ${USER}@${HOST}:ks.cfg
+fi
+
 echo "--- Running ${RUN_SCRIPT}."
 ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCTIPT}
 ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
 echo "--- Finished ${RUN_SCRIPT}."
 
 
-if [ "${GET_FILES}" == " " ]; then
+if [ ! "${GET_FILES}" = " " ]; then
   scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${USER}@${HOST}:${GET_FILES} ./data/
 fi
 

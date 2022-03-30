@@ -96,6 +96,7 @@ echo "port for ssh = ${SSH_PORT}"
 echo "script to run = ${RUN_SCRIPT}"
 echo "name of sha file= ${FULL_RUN_SHA}"
 
+
 #if [ "$SET_FILES" == "yes" ]
 
 #fi	
@@ -160,16 +161,21 @@ done
 echo "--- ssh is working. Put ${RUN_SCRIPT} ${PUT_FILES}."
 scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} bin/${RUN_SCRIPT} ${USER}@${HOST}:.
 
+if [ "${SET_TASK}" = "mkiso" ]; then
+       echo "---Install Kickstart file "
+       scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${KS} ${USER}@${HOST}:ks.cfg
+fi
 echo "--- Running ${RUN_SCRIPT}."
 ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCTIPT}
 ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
 echo "--- Finished ${RUN_SCRIPT}."
 
 
-if [ "${GET_FILES}" == " " ]; then
+if [ ! "${GET_FILES}" = " " ]; then
   scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${USER}@${HOST}:${GET_FILES} ./data/
 fi
-
+echo "sleep"
+sleep 150
 ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo sync && sync && shutdown -h now && sleep 10 && poweroff
 # Umm causes error. Needs looking into. 
 #timeout 30 wait $( cat pid.${SSH_PORT} )
