@@ -1,0 +1,121 @@
+#cloud-config
+users:
+  - default
+users:
+  - default
+  - name: ${USER}
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_import_id: None
+    ssh-authorized-keys:
+      - <MY_SSH_ACCESS_KEY>
+    lock_passwd: false
+package_upgrade: true
+package_update: true
+runcmd:
+trusted:
+  - |
+    -----BEGIN CERTIFICATE-----
+    MIIGDjCCA/agAwIBAgIQG8Cf23PdkYxO03HT1hdJgzANBgkqhkiG9w0BAQsFADCB
+    hjELMAkGA1UEBhMCVVMxJTAjBgNVBAoTHFNhbmRpYSBOYXRpb25hbCBMYWJvcmF0
+    b3JpZXMxITAfBgNVBAsTGEluZnJhc3RydWN0dXJlIENvbXB1dGluZzEtMCsGA1UE
+    AxMkU2FuZGlhIE5hdGlvbmFsIExhYm9yYXRvcmllcyBSb290IENBMB4XDTA5MTEw
+    OTIzMTE0N1oXDTI4MDcyMDE2NDkwOVowgYYxCzAJBgNVBAYTAlVTMSUwIwYDVQQK
+    ExxTYW5kaWEgTmF0aW9uYWwgTGFib3JhdG9yaWVzMSEwHwYDVQQLExhJbmZyYXN0
+    cnVjdHVyZSBDb21wdXRpbmcxLTArBgNVBAMTJFNhbmRpYSBOYXRpb25hbCBMYWJv
+    cmF0b3JpZXMgUm9vdCBDQTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIB
+    ALPn1R/PzRJ80zmAoGwJW5XBQirxTj1AD+0MD53TTWTon7pefCohvvVdySPokI2V
+    D9XhaeDoSuU8uk8i8P2SslSbC8UUtfg/mZYJeepLyVpCn2B3KxlALInVlkShaGBF
+    08E0egTRHTAfAvhgEiItpTTU8SGOxw5Id297lPvzbYXNGdEhvblVsmzGXubUJg/T
+    zXhy65TC6XX3wxiEzJkf1uQNaHNPrNpbXOWrJrU6LvJbwHEVVRztvQ8iKgqg69SZ
+    Sh1FrP0gegRGttHUtv6FzS2FTV5Kvk0tcfJk0r32Ncj0rD24O2uG26rhfKysuU0v
+    hCJZx2UJ2V7u26snKeQp5zA0OD1VtepzSigjaRjKM1WbzFZhdf9xFOUVX/5ox38k
+    HF71+HzLG0AORiv9BrlQNobGzYoy3T7jXTFrR323f9+TI4kIbFMxe0Oojx/6ehOd
+    8ay11BwLCQx/BKiXW+6hW4zUGniopVw3bOy9dCK3/VEhCZrmi5Nj6/eYA0789Lhb
+    xXIy0gj8zVET/wn+BEKZwAtJQGHuYuAASQqVh1f7g/ZQ+Atego0DReHefxyKsdXX
+    svqbWEkszX9QlVnRJcRitOxPvRzDcVxQXg8JwuPhekrKok1yxfpaD0iSYfS0SH/9
+    TsgKWu9fN51c+wRMrBTqgBUvHt0gr5rQVEDenJLG+uAPAgMBAAGjdjB0MAsGA1Ud
+    DwQEAwIBhjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBTE7rHPXWHH3oX8jAQE
+    UzQQj9IFeDAQBgkrBgEEAYI3FQEEAwIBATAjBgkrBgEEAYI3FQIEFgQUYuc5pgq3
+    afYji56UbciKtogz3nUwDQYJKoZIhvcNAQELBQADggIBAJtfCQWE5X5Fw9SmLPh0
+    slihgk1QBH7snUSOv37hc4goE4cMokhUZXn+oTGQAK1JLA8yexy46MAcyxRx/iws
+    C/iszza/hUwHkgCbnOISdhYXmnTUfYZc+E5fb5jQfz8SNsFvHUfnA5dJw0MFiHfa
+    gvyvZGAcjJ6EyadHWIeeDKkf1CoZqHmwZSDtPqJve0cC4KXew5R0Zpq5TNI2B0Hp
+    LRYtnFbL6UnxhZGmtoe+fJZPtJudOIm7W4eXsozSklo+q/+2QTvk+G8HinTvRsY3
+    mIYry01P9oGs4wCi58BZNSEikLBPgngxpKJ7j5LrZu4WjKV1W94ZprvHADNbsejv
+    eMWdanobw8fyl6YBR+mHjOJWPGwjNcXcFfySBgoJB8NUF5eVD31AC3Ym5iw7IVJ0
+    Rnvg7Mn+goqrg/cU3jZPbNzQNhqapPv8Z+RaEiyk6O7hjT3AX+EHq7Pe2o3UiQ3m
+    rGTq47EvEm+jJzF6WeN5wESznwM77K6Sxx7yADrwOWUWbgZGM1jANz8xgeQKzIVT
+    Czbp2v+bMwi4EtFuqpojtVjKG1Gt0FWSu1/38V0Fk4E2QNC6EhFnMXqVx2TeoAkk
+    exUyl+IXtdjGUfBsT3vhe61AZAYU83tfG70jRPpdrQ2lyrgZp0RlF+DG7lx2uhiP
+    NBczTSjtMSsY8zp/inyiTvT2
+    -----END CERTIFICATE-----
+proxy: http://proxy.sandia.gov
+boot-cmd:
+  - |
+    cat <<EOF | sudo tee /bc.crt
+    -----BEGIN CERTIFICATE-----
+    MIIGDjCCA/agAwIBAgIQG8Cf23PdkYxO03HT1hdJgzANBgkqhkiG9w0BAQsFADCB
+    hjELMAkGA1UEBhMCVVMxJTAjBgNVBAoTHFNhbmRpYSBOYXRpb25hbCBMYWJvcmF0
+    b3JpZXMxITAfBgNVBAsTGEluZnJhc3RydWN0dXJlIENvbXB1dGluZzEtMCsGA1UE
+    AxMkU2FuZGlhIE5hdGlvbmFsIExhYm9yYXRvcmllcyBSb290IENBMB4XDTA5MTEw
+    OTIzMTE0N1oXDTI4MDcyMDE2NDkwOVowgYYxCzAJBgNVBAYTAlVTMSUwIwYDVQQK
+    ExxTYW5kaWEgTmF0aW9uYWwgTGFib3JhdG9yaWVzMSEwHwYDVQQLExhJbmZyYXN0
+    cnVjdHVyZSBDb21wdXRpbmcxLTArBgNVBAMTJFNhbmRpYSBOYXRpb25hbCBMYWJv
+    cmF0b3JpZXMgUm9vdCBDQTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIB
+    ALPn1R/PzRJ80zmAoGwJW5XBQirxTj1AD+0MD53TTWTon7pefCohvvVdySPokI2V
+    D9XhaeDoSuU8uk8i8P2SslSbC8UUtfg/mZYJeepLyVpCn2B3KxlALInVlkShaGBF
+    08E0egTRHTAfAvhgEiItpTTU8SGOxw5Id297lPvzbYXNGdEhvblVsmzGXubUJg/T
+    zXhy65TC6XX3wxiEzJkf1uQNaHNPrNpbXOWrJrU6LvJbwHEVVRztvQ8iKgqg69SZ
+    Sh1FrP0gegRGttHUtv6FzS2FTV5Kvk0tcfJk0r32Ncj0rD24O2uG26rhfKysuU0v
+    hCJZx2UJ2V7u26snKeQp5zA0OD1VtepzSigjaRjKM1WbzFZhdf9xFOUVX/5ox38k
+    HF71+HzLG0AORiv9BrlQNobGzYoy3T7jXTFrR323f9+TI4kIbFMxe0Oojx/6ehOd
+    8ay11BwLCQx/BKiXW+6hW4zUGniopVw3bOy9dCK3/VEhCZrmi5Nj6/eYA0789Lhb
+    xXIy0gj8zVET/wn+BEKZwAtJQGHuYuAASQqVh1f7g/ZQ+Atego0DReHefxyKsdXX
+    svqbWEkszX9QlVnRJcRitOxPvRzDcVxQXg8JwuPhekrKok1yxfpaD0iSYfS0SH/9
+    TsgKWu9fN51c+wRMrBTqgBUvHt0gr5rQVEDenJLG+uAPAgMBAAGjdjB0MAsGA1Ud
+    DwQEAwIBhjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBTE7rHPXWHH3oX8jAQE
+    UzQQj9IFeDAQBgkrBgEEAYI3FQEEAwIBATAjBgkrBgEEAYI3FQIEFgQUYuc5pgq3
+    afYji56UbciKtogz3nUwDQYJKoZIhvcNAQELBQADggIBAJtfCQWE5X5Fw9SmLPh0
+    slihgk1QBH7snUSOv37hc4goE4cMokhUZXn+oTGQAK1JLA8yexy46MAcyxRx/iws
+    C/iszza/hUwHkgCbnOISdhYXmnTUfYZc+E5fb5jQfz8SNsFvHUfnA5dJw0MFiHfa
+    gvyvZGAcjJ6EyadHWIeeDKkf1CoZqHmwZSDtPqJve0cC4KXew5R0Zpq5TNI2B0Hp
+    LRYtnFbL6UnxhZGmtoe+fJZPtJudOIm7W4eXsozSklo+q/+2QTvk+G8HinTvRsY3
+    mIYry01P9oGs4wCi58BZNSEikLBPgngxpKJ7j5LrZu4WjKV1W94ZprvHADNbsejv
+    eMWdanobw8fyl6YBR+mHjOJWPGwjNcXcFfySBgoJB8NUF5eVD31AC3Ym5iw7IVJ0
+    Rnvg7Mn+goqrg/cU3jZPbNzQNhqapPv8Z+RaEiyk6O7hjT3AX+EHq7Pe2o3UiQ3m
+    rGTq47EvEm+jJzF6WeN5wESznwM77K6Sxx7yADrwOWUWbgZGM1jANz8xgeQKzIVT
+    Czbp2v+bMwi4EtFuqpojtVjKG1Gt0FWSu1/38V0Fk4E2QNC6EhFnMXqVx2TeoAkk
+    exUyl+IXtdjGUfBsT3vhe61AZAYU83tfG70jRPpdrQ2lyrgZp0RlF+DG7lx2uhiP
+    NBczTSjtMSsY8zp/inyiTvT2
+    -----END CERTIFICATE-----
+    EOF
+  - mkdir -p /usr/local/share/ca-certificates;cp /bc.crt /usr/local/share/ca-certificates/
+  - cp /bc.crt /usr/local/share/ca-certificates/ ; update-ca-certificates
+  - |
+    cat <<EOF | sudo tee /target/etc/environment
+    PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+    no_proxy='localhost,localnets,sandia.gov,gitlab.lan,127.0.0.1,169.254.169.254'
+    http_proxy='http://proxy.sandia.gov:80/'
+    https_proxy='http://proxy.sandia.gov:80/'
+    ftp_proxy='http://proxy.sandia.gov:80/'
+    EOF
+runcmd:
+  - |
+    cat <<EOF | sudo tee /target/root/check_ca-cert.sh
+    #!/bin/bash
+    . /etc/os-release
+    if [[ "\$ID_LIKE" == *"debian"* ]]; then
+       awk -v cmd='openssl x509 -noout -subject' '
+       /BEGIN/{close(cmd)};{print | cmd}' < /etc/ssl/certs/ca-certificates.crt
+    elif [[ "\$ID_LIKE" == *"rhel"* ]]; then
+       awk -v cmd='openssl x509 -noout -subject' '
+       /BEGIN/{close(cmd)};{print | cmd}' < /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+    else
+       echo "Linux type not detected."
+    fi
+    EOF
+  - /bin/chmod 755 /root/check_ca-cert.sh
+  - /usr/sbin/update-ca-certificates
+  - [ touch, /tmp/continue.txt ]

@@ -1,4 +1,5 @@
 #!/bin/bash
+SAVE_INCR="no" # options: "yes" or "no"
 
 if [ "$EUID" -eq 0 ]
 then 
@@ -24,7 +25,7 @@ if [ ! -z "${SHOW_HELP}" ]; then
 	echo "          -t (image,mkiso,mkisotoimg,process)"
         echo "          -r script must be found in bin directory."
 	echo "          -p ex: *.iso Assets/ /tmp/*x11.lock"
-	echo "          -p ex: *.tgz data_dir/ /tmp/*x11.lock"
+	echo "          -g ex: \\*.tgz data_dir/\\*.iso /tmp/\\*x11.lock"
 fi
 
 
@@ -80,22 +81,23 @@ if [ -z "${GET_FILES}" ]; then
     	GET_FILES=" "
 fi
 
-echo "os type = ${SET_OS}"
-echo "task type = ${SET_TASK}"
-echo "get files = ${GET_FILES}" 
-echo "put files = ${PUT_FILES}" 
-echo "run command = ${RUN_CMD}"
-echo "data dir = ${DATA_DIR} "
-echo "hostnane = ${HOST}"
-echo "image url = ${IMG_URL}"
-echo "image size = ${IMG_SIZE}"
-echo "image name = ${IMG}"
-echo "incr image = ${INCR_IMG}"
-echo "user-data file = ${USER_DATA}"
-echo "port for ssh = ${SSH_PORT}"
-echo "script to run = ${RUN_SCRIPT}"
-echo "name of sha file= ${FULL_RUN_SHA}"
-
+echo "os type          = ${SET_OS}"
+echo "task type        = ${SET_TASK}"
+echo "get files        = ${GET_FILES}" 
+echo "put files        = ${PUT_FILES}" 
+echo "run command      = ${RUN_CMD}"
+echo "data dir         = ${DATA_DIR} "
+echo "hostnane         = ${HOST}"
+echo "image url        = ${IMG_URL}"
+echo "image size       = ${IMG_SIZE}"
+echo "image name       = ${IMG}"
+echo "incr image       = ${INCR_IMG}"
+echo "user-data file   = ${USER_DATA}"
+echo "port for ssh     = ${SSH_PORT}"
+echo "script to run    = ${RUN_SCRIPT}"
+echo "name of sha file = ${FULL_RUN_SHA}"
+#cp cloud-init/user-data .
+echo "access key       = ${MY_SSH_ACCESS_KEY}"
 
 #if [ "$SET_FILES" == "yes" ]
 
@@ -125,7 +127,10 @@ if [ ! -f "${IMG}" ]; then
 	      #  sha256sum -b ${IMG}
 fi
 
+#cp cloud-init/user-data .
+
 qemu-system-x86_64 \
+  -cpu host \
   -drive file="${IMG}",if=virtio \
   -m 2G \
   -enable-kvm \
@@ -160,10 +165,19 @@ done
 
 echo "--- ssh is working. Put ${RUN_SCRIPT} ${PUT_FILES}."
 scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} bin/${RUN_SCRIPT} ${USER}@${HOST}:.
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST} mkdir -p data && rm -f zerofile
 
 if [ "${SET_TASK}" = "mkiso" ]; then
+	if [ -f "${DATA_DIR}/${ISO}" ]; then
+		scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${DATA_DIR}/${ISO}  ${USER}@${HOST}:data/
+	fi
+fi
+
+if [  ! -z "$KS" ]; then
+  if [ "${SET_TASK}" = "mkiso" ]; then
        echo "---Install Kickstart file "
        scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${KS} ${USER}@${HOST}:ks.cfg
+  fi
 fi
 echo "--- Running ${RUN_SCRIPT}."
 ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCTIPT}
@@ -172,20 +186,46 @@ echo "--- Finished ${RUN_SCRIPT}."
 
 
 if [ ! "${GET_FILES}" = " " ]; then
-  scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${USER}@${HOST}:${GET_FILES} ./data/
+  scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${USER}@${HOST}:${GET_FILES} ${DATA_DIR}/
+  ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo rm -rf ./data/*
+  ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo sync
+  ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo sync
+  ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} ls -al data/
 fi
-echo "sleep"
-sleep 150
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo sync && sync && shutdown -h now && sleep 10 && poweroff
+
+
+echo "--- Starting disk cleanup."
+if [ "${SAVE_INCR}" = "yes" ]; then
+	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo rm -rf data
+	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo swapoff -a
+	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo rm /swap*
+	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo sync
+	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo sync
+	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} dd if=/dev/zero of=zerofile bs=1M
+	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} rm -f zerofile
+	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} echo "sleeping..."
+	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo sync
+	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo sync
+	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sleep 10
+fi
+echo "--- poweroff"
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo  poweroff
+echo "--- Finished disk cleanup. Shutting down. "
+
 # Umm causes error. Needs looking into. 
 #timeout 30 wait $( cat pid.${SSH_PORT} )
 kill $( cat pid.${SSH_PORT} )
-sync
-sync
-rsync -av ${IMG} ${DATA_DIR}/incr_${IMG}
 
-sha256sum -b ${DATA_DIR}/incr_${IMG}
-echo "`sha256sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
+if [ "${SAVE_INCR}" = "yes" ]; then
+	sync
+	sync
+	time qemu-img convert -O qcow2 -p ${IMG} ${DATA_DIR}/incr_${IMG}
+	#rsync -av ${IMG} ${DATA_DIR}/incr_pre_${IMG}
+
+	ls -al ${DATA_DIR}
+	#sha256sum -b ${DATA_DIR}/incr_${IMG}
+	echo "`sha256sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
+fi
 
 echo "Wait time was: ${date2}"
 echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"

@@ -8,3 +8,6 @@ meta-data
 pid.*
 run_times.txt
 notes/
+spice/
+novnc/
+ssl/

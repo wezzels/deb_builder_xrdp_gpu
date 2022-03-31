@@ -1,0 +1,88 @@
+#cloud-config
+autoinstall:
+  version: 1
+  refresh-installer:  # start with an up-to-date installer
+  update: yes
+  interactive-sections:  # Install groups listed here will wait for user input
+    - storage
+  storage:  # should set the interactive default but doesn't seem to work??
+    layout:
+      name: direct
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  identity:  # This is section you may want to add to interactive-sections  (user name and password are ubuntu here)
+    hostname: puget-000
+    password: "$6$exDY1mhS4KUYCE/2$zmn9ToZwTKLhCw.b4/b.ZRTIZM30JZ4QrOQ2aOXJ8yk96xpcCof0kxKwuX1kqLG/ygbJ1f8wxED22bTL4F46P0"
+    username: ubuntu
+  ssh:
+    allow-pw: true
+    install-server: true
+  apt:
+    sources:
+      ignored1:  # This is here to get the yaml formatting right when adding a ppa
+        source: ppa:graphics-drivers/ppa
+  packages: 
+    - build-essential
+    - network-manager
+    - dkms
+    - emacs-nox
+    #- ubuntu-desktop-minimal^
+  package_update: true
+  package_upgrade: true
+  late-commands:
+    # Changing from networkd to NetworkManager
+    # move existing config out of the way
+    - find /target/etc/netplan/ -name "*.yaml" -exec sh -c 'mv "$1" "$1-orig"' _ {} \;
+    # Create a new netplan and enable it
+    - |
+      cat <<EOF | sudo tee /target/etc/netplan/01-netcfg.yaml
+      network:
+        version: 2
+        renderer: NetworkManager
+      EOF
+    - curtin in-target --target /target netplan generate
+    - curtin in-target --target /target netplan apply
+    - curtin in-target --target /target systemctl enable NetworkManager.service
+    # Write a script that can take care of some post install setup "late-commands" cannot be interactive unfortunately"
+    # - |
+    #   cat <<EOF | sudo tee /target/etc/finish-install-setup.sh
+    #   #!/usr/bin/env bash
+    #   echo *************************
+    #   echo ****  Finish Setup   ****
+    #   echo ************************* 
+    #   echo 'Enter the hostname for this system: '
+    #   read NEW_HOSTNAME
+    #   hostnamectl set-hostname \${NEW_HOSTNAME}
+    #   echo
+    #   echo 'Enter the timezone for this system: '
+    #   echo 'America/Los_Angeles America/Denver America/Chicago America/New_York'
+    #   read NEW_TIMEZONE
+    #   timedatectl set-timezone \${NEW_TIMEZONE}
+    #   echo *************************
+    #   echo
+    #   echo *************************
+    #   echo 'Restarting to finish ...'
+    #   shutdown -r 3
+    #   EOF
+    # - curtin in-target --target /target chmod 744 /etc/finish-install-setup.sh
+    - ls -l > /target/root/ls.out
+    - pwd > /target/root/pwd.out
+    - mount > /target/root/mount.out
+    - touch afile
+    - cp afile /target/root/
+    - ls -l / > /target/root/ls-root.out
+    - ls -l /target > /target/root/ls-target.out
+    - ls -l /target/cdrom > /target/root/ls-target-cdrom.out
+  user-data: # Commands here run during first boot (cannot be interactive)
+    runcmd:
+      # Install the NVIDIA driver from the ppa we setup earlier
+      - [apt-get, install, --yes,  nvidia-driver-470, --no-install-recommends]
+      - |
+        #!/usr/bin/env bash
+        echo ''
+        echo '***************************************'
+        echo ' To complete install setup please run, '
+        echo ' sudo /etc/finish-install-setup.sh'
+        echo '***************************************'
+        echo ''

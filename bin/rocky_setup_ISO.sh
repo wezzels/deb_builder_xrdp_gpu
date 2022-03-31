@@ -51,12 +51,12 @@ echo "...Finish create a working directory for customizations."
 echo "...Start edit grub and isolinux menus.."
 sed -i 's/set default="1"/set default="0"/g'  ${WORKING_DIR}/customiso/EFI/BOOT/grub.cfg
 sed -i 's/set timeout="1"/set timeout="0"/g'  ${WORKING_DIR}/customiso/EFI/BOOT/grub.cfg
-sed -i 's/inst.stage2=hd:LABEL=CentOS-Stream-8-x86_64-dvd quiet inst.text/inst.ks=cdrom:\/ks.cfg inst.stage2=hd:LABEL=CentOS-Stream-8-x86_64-dvd/g' ${WORKING_DIR}/customiso/EFI/BOOT/grub.cfg
+sed -i 's/inst.stage2=hd:LABEL=Rocky-8-5-x86_64-dvd quiet inst.text/inst.ks=cdrom:\/ks.cfg inst.stage2=hd:LABEL=Rocky-8-5-x86_64-dvd/g' ${WORKING_DIR}/customiso/EFI/BOOT/grub.cfg
 
 sed -i 's/timeout 600/timeout 0/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
 sed -i '0,/menu default/" "/' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
-sed -i '0,/menu label ^Install CentOS Stream 8-stream/menu default/' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
-sed -i 's/inst.stage2=hd:LABEL=CentOS-Stream-8-x86_64-dvd quiet/inst.ks=cdrom:\/ks.cfg inst.stage2=hd:LABEL=CentOS-Stream-8-x86_64-dvd/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
+sed -i '0,/menu label ^Install Rocky Linux 8/menu default/' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
+sed -i 's/inst.stage2=hd:LABEL=Rocky-8-5-x86_64-dvd quiet/inst.ks=cdrom:\/ks.cfg inst.stage2=hd:LABEL=Rocky-8-5-x86_64-dvd/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
 
 echo "...Finish edit grub and isolinux menus.."
 
@@ -68,7 +68,7 @@ umount ${WORKING_DIR}/originaliso
 echo "---Finished kickstart setup."
 
 echo "...Start create custom ISO."
-mkisofs -o ${DATA_DIR}/${ISO_NEW} -b isolinux/isolinux.bin -J -R -l -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e images/efiboot.img -no-emul-boot -graft-points -V "CentOS-Stream-8-x86_64-dvd" ${WORKING_DIR}/customiso/
+mkisofs -o ${DATA_DIR}/${ISO_NEW} -b isolinux/isolinux.bin -J -R -l -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e images/efiboot.img -no-emul-boot -graft-points -V "Rocky-8-5-x86_64-dvd" ${WORKING_DIR}/customiso/
 
 # Fixes USB boot issues and adds the checksum in the iso. 
 isohybrid --uefi ${DATA_DIR}/${ISO_NEW}

@@ -29,7 +29,7 @@ fi
 
 
 IFS="|"
-task_array=("image|mkiso|mkisotoimg|process")
+task_array=("mkisotoimg|process")
 if [ ! -z "${SET_TASK}" ]; then
         if [[ "${IFS}${task_array[*]}${IFS}" =~ "${IFS}${SET_TASK}${IFS}" ]]; then
                 #./bin/${SET_TASK}Linux.sh
@@ -61,18 +61,18 @@ else
   exit 1  
 fi
 
-if [ ! -z "${RUN_CMD}" ]; then
-	if [ ! -e bin/"${RUN_CMD}" ]; then
-    		echo "${RUN_CMD} is not found in bin/"
-		exit 1
-	else
-		echo "using prompt "
-		RUN_SCRIPT="${RUN_CMD}"
-	fi
-else 
-	echo "Run script must be set."
-	exit 1
-fi
+#if [ ! -z "${RUN_CMD}" ]; then
+#	if [ ! -e bin/"${RUN_CMD}" ]; then
+#    		echo "${RUN_CMD} is not found in bin/"
+#		exit 1
+#	else
+#		echo "using prompt "
+#		RUN_SCRIPT="${RUN_CMD}"
+#	fi
+#else 
+#	echo "Run script must be set."
+#	exit 1
+#fi
 
 if [ -z "${PUT_FILES}" ]; then
     	PUT_FILES=" "
@@ -110,18 +110,25 @@ mkdir -p $DATA_DIR
 kill $( ps -ef | grep qemu-system-x86_64 | xargs | cut -d" " -f2 )
 
 
-#Cleanup old files if they exist.
-rm -f pid.23* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
+#Cleanup old files if they exsist.
+rm -f pid.* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
 
-# Get image file from internet if not already downloaded.
+#Make a blank image if needed. 
 if [ ! -f "${DATA_DIR}/${IMG}" ]; then
-  wget -O "${DATA_DIR}/${IMG}" "${IMG_URL}"	
+  qemu-img create -f qcow2 ${DATA_DIR}/${IMG} 1G
 fi
 
-#Increase the size of the image.  
+# Move ISO image into directory for testing. 
+if [ ! -f "${ISO}" ]; then
+  rsync -av data/${ISO} ${DATA_DIR}/${ISO}
+else
+  echo "Error: Must run ISO builder first."
+  exit
+fi
+
 if [ ! -f "${IMG}" ]; then
   cp ${DATA_DIR}/${IMG} ${IMG}
-  qemu-img resize "${IMG}" +${IMG_SIZE}
+  qemu-img resize "${IMG}" +20G
 fi
 
 if [ ! -f "${USER_DATA}" ]; then
@@ -138,30 +145,27 @@ users:
     ssh-authorized-keys:
       - `cat /home/${USER}/.ssh/id_ed25519.pub`
     lock_passwd: false
-package_upgrade: true
-package_update: true
+#package_upgrade: true
+#package_update: true
 runcmd:
   - [ touch, /tmp/continue.txt ]
 #    - [ chmod, +x ,/tmp]
 EOF
 fi
 
+cloud-localds --disk-format qcow2 ${DATA_DIR}/cloud.img "${USER_DATA}"
 #cp cloud-init/user-data
 echo "access key = ${MY_SSH_ACCESS_KEY}"
 sed -i "s#<MY_SSH_ACCESS_KEY>#${MY_SSH_ACCESS_KEY}#" user-data
 
-if [ "${SET_TASK}" = "mkisotoimg" ]; then
-	LOAD_TYPE=" -cdrom ${DATA_DIR}/${ISO_NEW} -boot d "
-else
-	LOAD_TYPE="-drive file=${DATA_DIR}/cloud.img,if=virtio "
-fi
 
-cloud-localds --disk-format qcow2 ${DATA_DIR}/cloud.img "${USER_DATA}" 
+#cloud-localds --disk-format qcow2 ${DATA_DIR}/cloud.img "${USER_DATA}" 
 qemu-system-x86_64 \
   -cpu host \
   -drive file="${IMG}",if=virtio \
   -m 2G \
-  -drive file=${DATA_DIR}/cloud.img,if=virtio \
+  -boot d \
+  -cdrom ${DATA_DIR}/${ISO_NEW} \
   -enable-kvm \
   -smp 2 \
   -vga virtio \
@@ -247,7 +251,7 @@ echo "--- Finished disk cleanup. Shutting down. "
 kill $( cat pid.${SSH_PORT} )
 sync
 sync
-time qemu-img convert -O qcow2 -p -c ${IMG} ${DATA_DIR}/incr_${IMG}
+time qemu-img convert -O qcow2 -p -c ${IMG} ${DATA_DIR}/iso_build_${IMG}
 #rsync -av ${IMG} ${DATA_DIR}/incr_pre_${IMG}
 
 #sha256sum -b ${DATA_DIR}/incr_${IMG}

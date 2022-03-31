@@ -1,8 +1,8 @@
 #!/bin/bash
 # Install Latest 
-ISO_URL=https://repo.almalinux.org/almalinux/8/isos/x86_64/AlmaLinux-8.5-x86_64-boot.iso
-ISO=AlmaLinux-8.5-x86_64-boot.iso
-ISO_NEW=custom-AlmaLinux-8.5.iso
+ISO_URL=https://releases.ubuntu.com/20.04.4/ubuntu-20.04.4-live-server-amd64.iso
+ISO=ubuntu-20.04.4-live-server-amd64.iso
+ISO_NEW=custom-ubuntu-20.04.4-live-server-amd64.iso
 WORKING_DIR=/tmp/workdir
 DATA_DIR="`pwd`/data"
 BUILD_PKG=configs.tar.gz
@@ -16,152 +16,117 @@ do
      sleep 1
 done
 
-echo "Last command of the user-data detected.  Starting build "
-dnf makecache --refresh
-dnf update  -y
-dnf install -y git  
-dnf install -y createrepo genisoimage isomd5sum syslinux
-dnf install -y wget
-echo "...Starting copy ISO to working dir"
-mkdir -p ${DATA_DIR}
-mkdir -p ${WORKING_DIR}
+rm -f zerofile
+
+# install apt software needed.
+apt-get install -y p7zip-full
+apt-get install -y xorriso
+apt-get install -y isolinux
+apt-get -y update
+apt-get -y clean
+apt-get -y autoclean
+
+# Download ISO Installer:
 if [ ! -f "${DATA_DIR}/${ISO}" ]; then
-  wget -q -O "${DATA_DIR}/${ISO}" "${ISO_URL}"
-fi
-mkdir -p ${WORKING_DIR}/customiso
-mkdir -p ${WORKING_DIR}/originaliso
-mount -o loop ${DATA_DIR}/${ISO} ${WORKING_DIR}/originaliso
-rsync -av --progress  ${WORKING_DIR}/originaliso/ ${WORKING_DIR}/customiso/
-umount ${WORKING_DIR}/originaliso
-echo "...Finish copying ISO to working directory."
-
-echo "...Start create a working directory for customizations."
-if [ ! -d /tmp/Assets ]; then
-	mkdir -p /tmp/Assets
-	touch /tmp/Assets/file
+  mkdir -p ${DATA_DIR}	
+  wget -O ${DATA_DIR}/${ISO} ${ISO_URL}
 fi
 
-cp -r /tmp/Assets ${WORKING_DIR}/customiso/
-echo "...Finish create a working directory for customizations."
+#echo "28ccdb56450e643bad03bb7bcf7507ce3d8d90e8bf09e38f6bd9ac298a98eaad *ubuntu-20.04.4-live-server-amd64.iso" | shasum -a 256 --check
 
-createrepo -dpo  ${WORKING_DIR}/customiso/ ${WORKING_DIR}/customiso/Assets/
-echo "...Finish create a working directory for customizations."
+# Create ISO distribution dirrectory:
+mkdir -p iso/nocloud/
 
-echo "...Start edit grub and isolinux menus.."
-sed -i 's/set default="1"/set default="0"/g'  ${WORKING_DIR}/customiso/EFI/BOOT/grub.cfg
-sed -i 's/set timeout="1"/set timeout="0"/g'  ${WORKING_DIR}/customiso/EFI/BOOT/grub.cfg
-sed -i 's/inst.stage2=hd:LABEL=AlmaLinux-8-5-x86_64-dvd quiet inst.text/inst.ks=cdrom:/ks.cfg inst.stage2=hd:LABEL=AlmaLinux-8-5-x86_64-custom/g' ${WORKING_DIR}/customiso/EFI/BOOT/grub.cfg
+# Extract ISO using 7z:
+###7z x ubuntu-20.04.4-live-server-amd64.iso -x'![BOOT]' -oiso
+# Or extract ISO using xorriso and fix permissions:
+xorriso -osirrox on -indev "${DATA_DIR}/${ISO}" -extract / iso && chmod -R +w iso
 
-sed -i 's/timeout 600/timeout 0/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
-sed -i '0,/menu default/" "/' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
-sed -i '0,/menu label ^Install AlmaLinux 8.5/menu default/' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
-sed -i 's/inst.stage2=hd:LABEL=AlmaLinux-8-5-x86_64-dvd quiet/inst.ks=cdrom:\/ks.cfg inst.stage2=hd:LABEL=AlmaLinux-8-5-x86_64-custom/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
+# Create empty meta-data file:
+touch iso/nocloud/meta-data
 
-echo "...Finish edit grub and isolinux menus.."
+cat <<EOF> ./user-data
+#cloud-config
+autoinstall:
+  version: 1
+  interactive-sections:
+    - network
+    - storage
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  ssh:
+    allow-pw: true
+    install-server: false
+  late-commands:
+    - curtin in-target --target=/target -- apt-get --purge -y --quiet=2 remove apport bcache-tools btrfs-progs byobu cloud-guest-utils cloud-initramfs-copymods cloud-initramfs-dyn-netconf friendly-recovery fwupd landscape-common lxd-agent-loader ntfs-3g open-vm-tools plymouth plymouth-theme-ubuntu-text popularity-contest rsync screen snapd sosreport tmux ufw
+    - curtin in-target --target=/target -- apt-get --purge -y --quiet=2 autoremove
+    - curtin in-target --target=/target -- apt-get clean
+    - sed -i 's/ENABLED=1/ENABLED=0/' /target/etc/default/motd-news
+    - sed -i 's|# en_US.UTF-8 UTF-8|en_US.UTF-8 UTF-8|' /target/etc/locale.gen
+    - curtin in-target --target=/target -- locale-gen
+    - ln -fs /dev/null /target/etc/systemd/system/connman.service
+    - ln -fs /dev/null /target/etc/systemd/system/display-manager.service
+    - ln -fs /dev/null /target/etc/systemd/system/motd-news.service
+    - ln -fs /dev/null /target/etc/systemd/system/motd-news.timer
+    - ln -fs /dev/null /target/etc/systemd/system/plymouth-quit-wait.service
+    - ln -fs /dev/null /target/etc/systemd/system/plymouth-start.service
+    - ln -fs /dev/null /target/etc/systemd/system/systemd-resolved.service
+    - ln -fs /usr/share/zoneinfo/Europe/Kiev /target/etc/localtime
+    - rm -f /target/etc/resolv.conf
+    - printf 'nameserver 8.8.8.8\nnameserver 1.1.1.1\noptions timeout:1\noptions attempts:1\noptions rotate\n' > /target/etc/resolv.conf
+    - rm -f /target/etc/update-motd.d/10-help-text
+    - rm -rf /target/root/snap
+    - rm -rf /target/snap
+    - rm -rf /target/var/lib/snapd
+    - rm -rf /target/var/snap
+    - curtin in-target --target=/target -- passwd -q -u root
+    - curtin in-target --target=/target -- passwd -q -x -1 root
+    - curtin in-target --target=/target -- passwd -q -e root
+    - sed -i 's|^root:.:|root:$6$3b873df474b55246$GIpSsujar7ihMzG8urUKpzF9/2yZJhR.msyFRa5ouGXOKRCVszsc4aBcE2yi3IuFVxtAGwrPKin2WAzK3qOtB.:|' /target/etc/shadow
+  user-data:
+    disable_root: false
+EOF
 
-echo "...Start kickstart setup."
-cp -f ${KS} ${WORKING_DIR}/customiso/ks.cfg
-mount -o loop ${WORKING_DIR}/customiso/images/efiboot.img ${WORKING_DIR}/originaliso
-#sed -i '/linuxefi/s/$/ inst.ks=cdrom:\/isolinux\/ks.cfg/' ${WORKING_DIR}/originaliso/EFI/BOOT/grub.cfg
-umount ${WORKING_DIR}/originaliso
-echo "---Finished kickstart setup."
+# Copy user-data file:
+cp -f user-data iso/nocloud/user-data
 
-echo "...Start create custom ISO."
-mkisofs -o ${DATA_DIR}/custom-AlmaLinux-8.5.iso -b isolinux/isolinux.bin -J -R -l -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e images/efiboot.img -no-emul-boot -graft-points -V "AlmaLinux-8-5-x86_64-custom" ${WORKING_DIR}/customiso/
 
-# Fixes USB boot issues and adds the checksum in the iso. 
-isohybrid --uefi ${DATA_DIR}/custom-AlmaLinux-8.5.iso
-implantisomd5 ${DATA_DIR}/custom-AlmaLinux-8.5.iso
+# Update boot flags with cloud-init autoinstall:
+## Should look similar to this: initrd=/casper/initrd quiet autoinstall ds=nocloud;s=/cdrom/nocloud/ ---
+sed -i 's|---|autoinstall ds=nocloud\\\;s=/cdrom/nocloud/ ---|g' iso/boot/grub/grub.cfg
+sed -i 's|---|autoinstall ds=nocloud;s=/cdrom/nocloud/ ---|g' iso/isolinux/txt.cfg
 
-echo "...Finished create custom ISO."
+# Disable mandatory md5 checksum on boot:
+md5sum iso/.disk/info > iso/md5sum.txt
+sed -i 's|iso/|./|g' iso/md5sum.txt
 
-#echo "Pausing for a while."
+# (Optionally) Regenerate md5:
+# The find will warn 'File system loop detected' and return non-zero exit status on the 'ubuntu' symlink to '.'
+# To avoid that, temporarily move it out of the way
+mv iso/ubuntu .
+(cd iso; find '!' -name "md5sum.txt" '!' -path "./isolinux/*" -follow -type f -exec "$(which md5sum)" {} \; > ../md5sum.txt)
+mv md5sum.txt iso/
+mv ubuntu iso
+
+# Create Install ISO from extracted dir (Ubuntu):
+xorriso -as mkisofs -r \
+  -V Ubuntu\ custom\ amd64 \
+  -o ${DATA_DIR}/${ISO_NEW} \
+  -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot \
+  -boot-load-size 4 -boot-info-table \
+  -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot \
+  -isohybrid-gpt-basdat -isohybrid-apm-hfsplus \
+  -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin  \
+  iso/boot iso
+
+echo "--- Clean apt packages."
+apt-get -y update
+apt-get -y clean
+apt-get -y autoclean
+rm -rf iso user-data /tmp/*
+
 #sleep 500
-
-echo "All done."
-
-# Script Completed
-exit
-# 	NOTES and ideas pulled from various places.
-
-#Different ISO build. 
-xorriso -as mkisofs -o /isos/centOS8.iso -V "CentOS-8-1-1911-x86_64-dvd" -c isolinux/boot.cat -b isolinux/isolinux.bin -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e images/efiboot.img -no-emul-boot -R -J .
-https://www.golinuxcloud.com/create-custom-iso-rhel-centos-8/
-
-
-#Media
-#	https://repo.almalinux.org/almalinux/8/isos/x86_64/AlmaLinux-8.5-x86_64-boot.iso        #700M
-#	https://repo.almalinux.org/almalinux/8/isos/x86_64/AlmaLinux-8.5-x86_64-dvd.iso         #10G
-#	https://repo.almalinux.org/almalinux/8/isos/x86_64/AlmaLinux-8.5-x86_64-minimal.iso     #2G
-
-#Reference
-#	https://gist.github.com/VerosK/326ea836aaf1ee40b8d02d410707ca8f #centos complete build of version 7
-#       https://github.com/AlmaLinux/sig-livemedia                      #live image that runs off of dvd / cdrom
-#       https://github.com/AlmaLinux/cloud-images                       #Default process used to make cloud image.
-
-#Make a password hash
-#	$ plaintext='password'
-#	$ password=$(openssl passwd -6 $plaintext)
-#	$ echo $password
-#	$6$Lftvi9K28UlI8X.B$5knQkRMIieQzoeTgakK5oGrtGLU/tf2pbaakSkp0bbPqC.4k9HoreE./UH4QR7RZFH2Kg2QrxODkIeCw.CO5O0
-
-mount -o loop /dev/cdrom /mnt
-mkdir /ISO
-cp -r /mnt/. /ISO/kickstart.iso
-umount /mnt
-cp kickstart.cfg /ISO/kickstart.iso/isolinux/ks.cfg
-sed -i '/append\ initrd/s/$/ inst.ks=cdrom:\/isolinux\/ks.cfg/' /ISO/kickstart.iso/isolinux/isolinux.cfg
-sed -i '/linuxefi/s/$/ inst.ks=cdrom:\/isolinux\/ks.cfg/' /ISO/kickstart.iso/EFI/BOOT/grub.cfg
-mount -o loop /ISO/kickstart.iso/images/efiboot.img /mnt
-sed -i '/linuxefi/s/$/ inst.ks=cdrom:\/isolinux\/ks.cfg/' /mnt/EFI/BOOT/grub.cfg
-umount /mnt
-
-xorriso -as mkisofs -o /ISOs/test.iso -V "CentOS 7 x86_64" \
--c isolinux/boot.cat -b isolinux/isolinux.bin -no-emul-boot -boot-load-size 4 \
--boot-info-table -eltorito-alt-boot \
--e images/efiboot.img -no-emul-boot -R -J /ISO/kickstart.iso/
-
-
-#Kickstart changes that may need to happen.
-exit
-%include /tmp/uefi
-%include /tmp/legacy
-
-%pre --logfile /tmp/kickstart.install.pre.log
-
-clearpart --all --initlabel
-
-if [ -d /sys/firmware/efi ] ; then
-
- cat >> /tmp/uefi <<END
-
-part /boot --fstype="ext4" --size=512
-part /boot/efi --fstype="vfat" --size=1024
-part swap  --size=100  --fstype=swap
-part pv.13 --size=1 --grow
-volgroup VolGroup00 pv.13
-logvol / --fstype xfs --name=rootsys --vgname=VolGroup00 --size=3000
-
-END
-
-else
-
- cat >> /tmp/legacy <<END
-
-part /boot  --fstype=ext4 --size=300
-part pv.6 --size=1000 --grow --ondisk=$d1
-part swap  --size=100  --fstype=swap
-part pv.13 --size=1 --grow
-volgroup VolGroup00 pv.13
-logvol / --fstype xfs --name=rootsys --vgname=VolGroup00 --size=3000
-
-END
-
-fi
-
-if [ -d /sys/firmware/efi ] ; then
-touch /tmp/legacy
-else
-touch /tmp/uefi
-fi
-chvt 1
+# After install:
+# - login with 'root:root' and change root user password
+# - set correct hostname with 'hostnamectl'

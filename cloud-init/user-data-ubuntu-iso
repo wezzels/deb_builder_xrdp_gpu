@@ -1,0 +1,40 @@
+#cloud-config
+autoinstall:
+  version: 1
+  interactive-sections:
+    - network
+    - storage
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  ssh:
+    allow-pw: true
+    install-server: false
+  late-commands:
+    - curtin in-target --target=/target -- apt-get --purge -y --quiet=2 remove apport bcache-tools btrfs-progs byobu cloud-guest-utils cloud-initramfs-copymods cloud-initramfs-dyn-netconf friendly-recovery fwupd landscape-common lxd-agent-loader ntfs-3g open-vm-tools plymouth plymouth-theme-ubuntu-text popularity-contest rsync screen snapd sosreport tmux ufw
+    - curtin in-target --target=/target -- apt-get --purge -y --quiet=2 autoremove
+    - curtin in-target --target=/target -- apt-get clean
+    - sed -i 's/ENABLED=1/ENABLED=0/' /target/etc/default/motd-news
+    - sed -i 's|# en_US.UTF-8 UTF-8|en_US.UTF-8 UTF-8|' /target/etc/locale.gen
+    - curtin in-target --target=/target -- locale-gen
+    - ln -fs /dev/null /target/etc/systemd/system/connman.service
+    - ln -fs /dev/null /target/etc/systemd/system/display-manager.service
+    - ln -fs /dev/null /target/etc/systemd/system/motd-news.service
+    - ln -fs /dev/null /target/etc/systemd/system/motd-news.timer
+    - ln -fs /dev/null /target/etc/systemd/system/plymouth-quit-wait.service
+    - ln -fs /dev/null /target/etc/systemd/system/plymouth-start.service
+    - ln -fs /dev/null /target/etc/systemd/system/systemd-resolved.service
+    - ln -fs /usr/share/zoneinfo/Europe/Kiev /target/etc/localtime
+    - rm -f /target/etc/resolv.conf
+    - printf 'nameserver 8.8.8.8\nnameserver 1.1.1.1\noptions timeout:1\noptions attempts:1\noptions rotate\n' > /target/etc/resolv.conf
+    - rm -f /target/etc/update-motd.d/10-help-text
+    - rm -rf /target/root/snap
+    - rm -rf /target/snap
+    - rm -rf /target/var/lib/snapd
+    - rm -rf /target/var/snap
+    - curtin in-target --target=/target -- passwd -q -u root
+    - curtin in-target --target=/target -- passwd -q -x -1 root
+    - curtin in-target --target=/target -- passwd -q -e root
+    - sed -i 's|^root:.:|root:$6$3b873df474b55246$GIpSsujar7ihMzG8urUKpzF9/2yZJhR.msyFRa5ouGXOKRCVszsc4aBcE2yi3IuFVxtAGwrPKin2WAzK3qOtB.:|' /target/etc/shadow
+  user-data:
+    disable_root: false
