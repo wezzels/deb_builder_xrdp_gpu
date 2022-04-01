@@ -8,20 +8,16 @@ prep_system.sh -- cofigure user and has the tar files for the build
 
 #Runs a full build including downloading the image for ubuntu. 
 ```
-run_full_vm_process_build.sh  
-  Usage: ./run_full_vm_process_build.sh
+ time ./run_full_make_updated_image.sh -o Alma8 -t image -r alma_setup.sh 
+ time ./run_incr_make_updated_image.sh -o Alma8 -t mkiso -r alma_setup_ISO.sh
+ time ./run_cdrom_test.sh -t mkisotoimg -o Alma8 
+ time ./run_incr_make_updated_image.sh -o Rocky8 -t mkiso -r rocky_setup_ISO.sh
+ time ./run_incr_make_updated_image.sh -o CentOS8 -t mkiso -r centos_setup_ISO.sh
+ time ./run_incr_make_updated_image.sh -o Ubuntu2004 -t mkiso -r ubuntu_setup_ISO.sh
+ time ./run_cdrom_test.sh -t mkisotoimg -o Ubuntu2004
 ```
 #Runs an incremental from a previous run of the full.   
 ```
-run_incr_vm_process_build.sh  
-  Usage: ./run_incr_vm_process_build.sh
-```
-#Develop script to make the build.
-```
-make_xrdp_xorgxrdp_deb_packages.sh  
-  Runs from a call from the run_scripts.
-```
-
 ## Instructions:
 
   Install ubuntu 20.04 on a physical machine make sure user is in KVM group. Install qemu-kvm. 
@@ -47,38 +43,4 @@ sudo prep_system -u <user>
 ```
 resulting times will be in run_times.txt
 ```
----- Start ----
------
-./run_full_vm_process_build.sh , make_xrdp_xorgxrdp_deb_packages.sh
-Wait time was: 00:02:17
-Total Time:  00:05:48
------
-./run_full_vm_AlmaLinux.sh , alma_setup.sh
-Wait time was: 00:00:02
-Total Time:  00:05:07
------
-./run_full_vm_Ubuntu.sh , ubuntu_setup.sh
-Wait time was: 00:00:43
-Total Time:  00:01:10
------
-./run_full_vm_AlmaISO.sh , alma_setup_ISO.sh
-Wait time was: 00:04:20
-Total Time:  00:07:58
------
-./run_incr_vm_process_build.sh , make_xrdp_xorgxrdp_deb_packages.sh
-Wait time was: 00:00:01
-Total Time:  00:03:06
------
-./run_incr_vm_AlmaLinux.sh , alma_setup.sh
-Wait time was: 00:00:00
-Total Time:  00:00:04
------
-./run_incr_vm_Ubuntu.sh , ubuntu_setup.sh
-Wait time was: 00:00:01
-Total Time:  00:00:12
------
-./run_incr_vm_AlmaISO.sh , alma_setup_ISO.sh
-Wait time was: 00:00:00
-Total Time:  00:00:41
----- Finished ----
 ```
