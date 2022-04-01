@@ -194,7 +194,7 @@ qemu-system-x86_64 \
 echo "Not sure how long to wait. Waiting around 20 seconds."
 sleep 15
 echo "Starting Run. Task to be done. Can take several minutes to update and configure system."
-echo " Can ignore \" kex_exchange_identification: <msg> \" Error means system not up yet."
+echo " Waiting for build to complete.  Can take 20 - 50 minutes dependingon network speed."
 
 date1=`date +%s`
 date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
