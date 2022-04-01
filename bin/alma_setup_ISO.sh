@@ -53,9 +53,9 @@ sed -i 's/set timeout="1"/set timeout="0"/g'  ${WORKING_DIR}/customiso/EFI/BOOT/
 sed -i 's/inst.stage2=hd:LABEL=AlmaLinux-8-5-x86_64-dvd quiet inst.text/inst.ks=cdrom:/ks.cfg inst.stage2=hd:LABEL=AlmaLinux-8-5-x86_64-custom/g' ${WORKING_DIR}/customiso/EFI/BOOT/grub.cfg
 
 sed -i 's/default=1/default=0/g' ${WORKING_DIR}/customiso/isolinux/grub.conf
-sed -i 's/timeout 600/timeout 0/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
-sed -i '0,/menu default/" "/' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
-sed -i '0,/menu label ^Install AlmaLinux 8.5/menu default/' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
+sed -i 's/timeout 600/timeout 10/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
+sed -i '/  menu default/d' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
+sed -i '/menu label ^Install/a menu default/' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
 sed -i 's/inst.stage2=hd:LABEL=AlmaLinux-8-5-x86_64-dvd quiet/inst.ks=cdrom:\/ks.cfg inst.stage2=hd:LABEL=AlmaLinux-8-5-x86_64-custom/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
 
 echo "...Finish edit grub and isolinux menus.."
@@ -76,8 +76,8 @@ implantisomd5 ${DATA_DIR}/custom-AlmaLinux-8.5.iso
 
 echo "...Finished create custom ISO."
 
-echo "Pausing for a while."
-sleep 500
+#echo "Pausing for a while."
+#sleep 500
 
 echo "All done."
 

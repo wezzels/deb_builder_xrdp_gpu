@@ -101,6 +101,9 @@ echo "user-data file   = ${USER_DATA}"
 echo "port for ssh     = ${SSH_PORT}"
 echo "script to run    = ${RUN_SCRIPT}"
 echo "name of sha file = ${FULL_RUN_SHA}"
+echo "my key file      = ${MY_KEY}"
+echo "my key file      = ${MY_SSH_ACCESS_KEY}"
+echo "my ssh options   = ${MY_OPTS_SSH}"
 
 
 #if [ "$SET_FILES" == "yes" ]
@@ -121,8 +124,8 @@ rm -f pid.* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
 if [ ! -f "${DATA_DIR}/${IMG_NEW}" ]; then
   qemu-img create -f qcow2 ${DATA_DIR}/${IMG_NEW} 1G
 else
-	echo " Error: built IMAGE w/${ISO_NEW}"
-	echo "   Remove ${DATA_DIR}/${IMG_NEW} first."
+	echo " Error: built IMAGE w/${ISO_NEW} failed"
+	echo "  please remove ${DATA_DIR}/${IMG_NEW} first."
 	exit 1
 fi
 
@@ -196,74 +199,17 @@ echo " Can ignore \" kex_exchange_identification: <msg> \" Error means system no
 date1=`date +%s`
 date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
 
-echo "my key file = ${MY_KEY}"
-echo "my ssh options: ${MY_OPTS_SSH}"
 
-until [ "`ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST}  ls /tmp | grep continue`" = "continue.txt" ]
-do
-        echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r"
-        date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
-        sleep 1
-done
+PID=`cat ./pid.${SSH_PORT}`
+tail --pid=$PID -f /dev/null
 
-echo "--- ssh is working. Put ${RUN_SCRIPT} ${PUT_FILES}."
-scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} bin/${RUN_SCRIPT} ${USER}@${HOST}:.
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST} mkdir -p data && rm -f zerofile
-
-if [ "${SET_TASK}" = "mkiso" ]; then
-        if [ -f "${DATA_DIR}/${ISO}" ]; then
-                scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${DATA_DIR}/${ISO}  ${USER}@${HOST}:data/
-        fi
-fi
-
-if [  ! -z "$KS" ]; then
-  if [ "${SET_TASK}" = "mkiso" ]; then
-       echo "---Install Kickstart file "
-       scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${KS} ${USER}@${HOST}:ks.cfg
-  fi
-fi
-
-echo "--- Running ${RUN_SCRIPT}."
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCTIPT}
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
-echo "--- Finished ${RUN_SCRIPT}."
-
-if [ ! "${GET_FILES}" = " " ]; then
-  scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${USER}@${HOST}:${GET_FILES} ${DATA_DIR}/
-  ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo rm -rf ./data/*
-  ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo sync
-  ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo sync
-  ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} ls -al data/
-fi
-
-
-echo "--- Starting disk cleanup."
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo rm -rf data
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo swapoff -a
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo rm /swap*
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo sync
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo sync
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} dd if=/dev/zero of=zerofile bs=1M
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} rm -f zerofile
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} echo "sleeping..."
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo sync
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo sync
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sleep 10
-echo "--- poweroff"
-ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo  poweroff
-echo "--- Finished disk cleanup. Shutting down. "
-
-
-# Umm causes error. Needs looking into. 
-#timeout 30 wait $( cat pid.${SSH_PORT} )
-kill $( cat pid.${SSH_PORT} )
 sync
 sync
-time qemu-img convert -O qcow2 -p -c ${IMG} ${DATA_DIR}/iso_build_${IMG}
-#rsync -av ${IMG} ${DATA_DIR}/incr_pre_${IMG}
+time qemu-img convert -O qcow2 -p -c ${IMG} ${DATA_DIR}/${IMG_NEW}
+#rsync -av ${IMG} ${DATA_DIR}/${IMG_NEW}
 
-#sha256sum -b ${DATA_DIR}/incr_${IMG}
-echo "`sha256sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
+#sha256sum -b ${DATA_DIR}/${IMG_NEW}
+echo "`sha256sum -b ${IMG_NEW}`" > ${DATA_DIR}/${FULL_RUN_SHA}
 
 echo "Wait time was: ${date2}"
 echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"
