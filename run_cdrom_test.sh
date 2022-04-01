@@ -93,6 +93,10 @@ echo "image url        = ${IMG_URL}"
 echo "image size       = ${IMG_SIZE}"
 echo "image name       = ${IMG}"
 echo "incr image       = ${INCR_IMG}"
+echo "new image        = ${NEW_IMG}"
+echo "iso url          = ${ISO_URL}"
+echo "iso name         = ${ISO}"
+echo "iso custom       = ${ISO_NEW}"
 echo "user-data file   = ${USER_DATA}"
 echo "port for ssh     = ${SSH_PORT}"
 echo "script to run    = ${RUN_SCRIPT}"
@@ -114,20 +118,24 @@ kill $( ps -ef | grep qemu-system-x86_64 | xargs | cut -d" " -f2 )
 rm -f pid.* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
 
 #Make a blank image if needed. 
-if [ ! -f "${DATA_DIR}/${IMG}" ]; then
-  qemu-img create -f qcow2 ${DATA_DIR}/${IMG} 1G
+if [ ! -f "${DATA_DIR}/${IMG_NEW}" ]; then
+  qemu-img create -f qcow2 ${DATA_DIR}/${IMG_NEW} 1G
+else
+	echo " Error: built IMAGE w/${ISO_NEW}"
+	echo "   Remove ${DATA_DIR}/${IMG_NEW} first."
+	exit 1
 fi
 
 # Move ISO image into directory for testing. 
-if [ ! -f "${ISO}" ]; then
-  rsync -av data/${ISO} ${DATA_DIR}/${ISO}
-else
-  echo "Error: Must run ISO builder first."
-  exit
-fi
+#if [ ! -f "${ISO}" ]; then
+#  rsync -av data/${ISO} ${DATA_DIR}/${ISO}
+#else
+#  echo "Error: Must run ISO builder first."
+#  exit
+#fi
 
 if [ ! -f "${IMG}" ]; then
-  cp ${DATA_DIR}/${IMG} ${IMG}
+  cp ${DATA_DIR}/${IMG_NEW} ${IMG}
   qemu-img resize "${IMG}" +20G
 fi
 
@@ -153,7 +161,7 @@ runcmd:
 EOF
 fi
 
-cloud-localds --disk-format qcow2 ${DATA_DIR}/cloud.img "${USER_DATA}"
+#cloud-localds --disk-format qcow2 ${DATA_DIR}/cloud.img "${USER_DATA}"
 #cp cloud-init/user-data
 echo "access key = ${MY_SSH_ACCESS_KEY}"
 sed -i "s#<MY_SSH_ACCESS_KEY>#${MY_SSH_ACCESS_KEY}#" user-data
