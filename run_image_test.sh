@@ -21,7 +21,7 @@ done
 if [ ! -z "${SHOW_HELP}" ]; then
 	echo "USAGE: ./run_cmd.sh -o <OSTYPE> -t <TASK> -r <RUN_SCRIPT> -p <PUT_FILES or DIRS> -g <GET_FILES or DIRS>"
 	echo "          -o (Alma8,CentOS8,Rocky8,Ubuntu2004)"
-	echo "          -t (image,mkiso,mkisotoimg,process)"
+	echo "          -t (image,mkiso,mkisotoimg,imgtest,process)"
         echo "          -r script must be found in bin directory."
 	echo "          -p ex: *.iso Assets/ /tmp/*x11.lock"
 	echo "          -p ex: *.tgz data_dir/ /tmp/*x11.lock"
@@ -29,7 +29,7 @@ fi
 
 
 IFS="|"
-task_array=("mkisotoimg|process")
+task_array=("mkisotoimg|imgtest|process")
 if [ ! -z "${SET_TASK}" ]; then
         if [[ "${IFS}${task_array[*]}${IFS}" =~ "${IFS}${SET_TASK}${IFS}" ]]; then
                 #./bin/${SET_TASK}Linux.sh
@@ -120,11 +120,15 @@ kill $( ps -ef | grep qemu-system-x86_64 | xargs | cut -d" " -f2 )
 #Cleanup old files if they exsist.
 rm -f pid.* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
 
-#Make a blank image if needed. 
+# get incr and show sha512 hashs of copy and original.
 if [ -f "${DATA_DIR}/${IMG_NEW}" ]; then
-  qemu-img ${DATA_DIR}/${IMG_NEW} ${IMG}
+	rsync -av ${DATA_DIR}/${IMG_NEW} ${IMG}
+        echo "SHA validation"
+        cat ${DATA_DIR}/${FULL_RUN_SHA}
+        #sha256sum -b ${DATA_DIR}/${INCR_IMG}
+        sha256sum -b ${IMG_NEW}
 else
-	echo " Error: built IMAGE w/${ISO_NEW} failed"
+	echo " Error: built IMAGE w/${ISO_NEW} not found."
 	echo "  please remove ${DATA_DIR}/${IMG_NEW} first."
 	exit 1
 fi
@@ -137,13 +141,13 @@ fi
 #  exit
 #fi
 
-if [ ! -f "${IMG}" ]; then
-  cp ${DATA_DIR}/${IMG_NEW} ${IMG}
-  qemu-img resize "${IMG}" +20G
-fi
+#if [ ! -f "${IMG}" ]; then
+#  cp ${DATA_DIR}/${IMG_NEW} ${IMG}
+#  qemu-img resize "${IMG}" +20G
+#fi
 
 if [ ! -f "${USER_DATA}" ]; then
-echo "instance-id: $(uuidgen || echo i-softbuild)" > meta-data
+  echo "instance-id: $(uuidgen || echo i-softbuild)" > meta-data
   cat >user-data <<EOF
 #cloud-config
 users:
@@ -180,11 +184,13 @@ qemu-system-x86_64 \
   -vga virtio \
   -net nic,model=virtio -net tap,ifname=tap0,script=no,downscript=no \
   -name "Build Linux" \
-  -vnc 127.0.0.1:2 \
+  -vnc 127.0.0.1:2,password=on -monitor stdio \
   -net user,hostfwd=tcp::${SSH_PORT}-:22 \
   -net nic \
-  -daemonize \
   -pidfile ./pid.${SSH_PORT}
+
+
+  #-daemonize \
 
   #-spice port=5902,password=password \
   #-vnc 127.0.0.1:2, password \
@@ -203,11 +209,12 @@ tail --pid=$PID -f /dev/null
 
 sync
 sync
-time qemu-img convert -O qcow2 -p -c ${IMG} ${DATA_DIR}/${IMG_NEW}
+#No saving of image.
+#time qemu-img convert -O qcow2 -p -c ${IMG} ${DATA_DIR}/${IMG_NEW}
 #rsync -av ${IMG} ${DATA_DIR}/${IMG_NEW}
 
 #sha256sum -b ${DATA_DIR}/${IMG_NEW}
-echo "`sha256sum -b ${IMG_NEW}`" > ${DATA_DIR}/${FULL_RUN_SHA}
+#echo "`sha256sum -b ${IMG_NEW}`" > ${DATA_DIR}/${FULL_RUN_SHA}
 
 echo "Wait time was: ${date2}"
 echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"

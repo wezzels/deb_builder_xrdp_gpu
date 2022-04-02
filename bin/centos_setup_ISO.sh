@@ -7,7 +7,7 @@ ISO_LABEL=CentOS-Stream-8-x86_64-dvd
 WORKING_DIR=/tmp/workdir
 DATA_DIR="`pwd`/data"
 BUILD_PKG=configs.tar.gz
-KS=custom.ks
+KS=ks.cfg
 
 # Target Versions and Folders
 
@@ -53,9 +53,9 @@ sed -i 's/set default="1"/set default="0"/g'  ${WORKING_DIR}/customiso/EFI/BOOT/
 sed -i 's/set timeout="1"/set timeout="0"/g'  ${WORKING_DIR}/customiso/EFI/BOOT/grub.cfg
 sed -i 's/inst.stage2=hd:LABEL=CentOS-Stream-8-x86_64-dvd quiet inst.text/inst.ks=cdrom:\/ks.cfg inst.stage2=hd:LABEL=CentOS-Stream-8-x86_64-dvd/g' ${WORKING_DIR}/customiso/EFI/BOOT/grub.cfg
 
-sed -i 's/timeout 600/timeout 0/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
-sed -i '0,/menu default/" "/' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
-sed -i '0,/menu label ^Install CentOS Stream 8-stream/menu default/' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
+sed -i 's/timeout 600/timeout 10/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
+sed -i '/  menu default/d' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
+sed -i '/menu label ^Install/a \ \ menu default' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
 sed -i 's/inst.stage2=hd:LABEL=CentOS-Stream-8-x86_64-dvd quiet/inst.ks=cdrom:\/ks.cfg inst.stage2=hd:LABEL=CentOS-Stream-8-x86_64-dvd/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
 
 echo "...Finish edit grub and isolinux menus.."

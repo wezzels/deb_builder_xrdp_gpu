@@ -15,7 +15,7 @@ then
     then echo "Need to run as root. when using the -u <uid>."
     exit
   fi
-  apt-get install -y uml-utilities
+  apt-get install -y uml-utilities gnutls-bin
   tunctl -t tap0 -u ${SET_USER}
   exit
 fi

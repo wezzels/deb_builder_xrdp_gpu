@@ -55,7 +55,7 @@ sed -i 's/inst.stage2=hd:LABEL=AlmaLinux-8-5-x86_64-dvd quiet inst.text/inst.ks=
 sed -i 's/default=1/default=0/g' ${WORKING_DIR}/customiso/isolinux/grub.conf
 sed -i 's/timeout 600/timeout 10/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
 sed -i '/  menu default/d' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
-sed -i '/menu label ^Install/a menu default/' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
+sed -i '/menu label ^Install/a \ \ menu default' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
 sed -i 's/inst.stage2=hd:LABEL=AlmaLinux-8-5-x86_64-dvd quiet/inst.ks=cdrom:\/ks.cfg inst.stage2=hd:LABEL=AlmaLinux-8-5-x86_64-custom/g' ${WORKING_DIR}/customiso/isolinux/isolinux.cfg
 
 echo "...Finish edit grub and isolinux menus.."
