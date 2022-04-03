@@ -16,7 +16,11 @@ then
     exit
   fi
   apt-get install -y uml-utilities gnutls-bin ovmf
-  tunctl -t tap0 -u ${SET_USER}
+  tunctl -t tap0_${SET_USER} -u ${SET_USER}
+  tunctl -t tap1_${SET_USER} -u ${SET_USER}
+  tunctl -t tap2_${SET_USER} -u ${SET_USER}
+  tunctl -t tap3_${SET_USER} -u ${SET_USER}
+  tunctl -t tap4_${SET_USER} -u ${SET_USER}
   exit
 fi
 
