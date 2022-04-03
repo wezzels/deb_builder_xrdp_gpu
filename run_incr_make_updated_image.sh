@@ -139,10 +139,10 @@ qemu-system-x86_64 \
   -enable-kvm \
   -smp 2 \
   -vga virtio \
-  -net nic,model=virtio -net tap,ifname=tap0,script=no,downscript=no \
+  -net nic,model=virtio -net tap,ifname=${NET_TAP},script=no,downscript=no \
   -name "AlmaLinux Server" \
   -vnc :2 \
-  -net user,hostfwd=tcp::${SSH_PORT}-:22 \
+  -net user,id=${NET_TAP},hostfwd=tcp::${SSH_PORT}-:22 \
   -net nic \
   -daemonize \
   -pidfile ./pid.${SSH_PORT}

@@ -104,6 +104,7 @@ echo "name of sha file = ${FULL_RUN_SHA}"
 echo "my key file      = ${MY_KEY}"
 echo "my key file      = ${MY_SSH_ACCESS_KEY}"
 echo "my ssh options   = ${MY_OPTS_SSH}"
+echo "TAP0 name        = ${NET_TAP}"
 
 
 #if [ "$SET_FILES" == "yes" ]
@@ -182,10 +183,10 @@ qemu-system-x86_64 \
   -enable-kvm \
   -smp 2 \
   -vga virtio \
-  -net nic,model=virtio -net tap,ifname=tap0,script=no,downscript=no \
+  -net nic,model=virtio -net tap,ifname=${NET_TAP},script=no,downscript=no \
   -name "Build Linux" \
   -vnc 127.0.0.1:2   \
-  -net user,hostfwd=tcp::${SSH_PORT}-:22 \
+  -net user,id=${NET_TAP},hostfwd=tcp::${SSH_PORT}-:22 \
   -net nic \
   -daemonize \
   -pidfile ./pid.${SSH_PORT}

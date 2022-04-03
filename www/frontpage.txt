@@ -1,0 +1,13 @@
+0 (hidden) alerts
+1 (Header) (Company) [Login]
+2 (Tasks)  KBT [new / try]  overview tutorial wiki [src]
+3a (Left Side ) news	3b (Right Side) demo [gif / vid]
+
+
+4 (Sales pitch) Why?[Usage][Help][Cost cutting] [Repeatable results]
+
+5 (Help tools) Related tools / resource links
+
+6 (footer) auther ... src [of webpage]
+
+
