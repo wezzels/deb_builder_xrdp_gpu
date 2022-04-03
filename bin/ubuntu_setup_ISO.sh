@@ -45,7 +45,7 @@ xorriso -osirrox on -indev "${DATA_DIR}/${ISO}" -extract / iso && chmod -R +w is
 # Create empty meta-data file:
 touch iso/nocloud/meta-data
 
-cat <<EOF> ./user-data
+cat <<EOF> ./user-data2
 #cloud-config
 autoinstall:
   version: 1
@@ -126,6 +126,7 @@ apt-get -y clean
 apt-get -y autoclean
 rm -rf iso user-data /tmp/*
 
+#echo "Pausing..."
 #sleep 500
 # After install:
 # - login with 'root:root' and change root user password

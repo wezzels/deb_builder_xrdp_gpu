@@ -1,0 +1,71 @@
+#cloud-config
+autoinstall:
+  version: 1
+  apt:
+    geoip: true
+    preserve_sources_list: false
+    primary:
+    - arches: [amd64, i386]
+      uri: http://archive.ubuntu.com/ubuntu
+    - arches: [default]
+      uri: http://ports.ubuntu.com/ubuntu-ports
+  packages:
+    - ansible
+    - ctags
+ # identity: {hostname: ubuntu-server, password: $6$h177Y0K.wBPOk9P2$N6n.x4e4757k/HAthwQeMB9WmjBPytYZkt6u7jdwQAhwNE.Pjd/mfjrkA2CaBSlnECJFLali/kpxZp2I5iVHb/, realname: ubuntu, username: ubuntu}
+  keyboard: {layout: us, toggle: null, variant: ''}
+  locale: en_US.UTF-8
+  network:
+    ethernets:
+      ens3: {dhcp4: true}
+      ens4: {dhcp4: true}
+    version: 2
+  ssh: {allow-pw: true, authorized-keys: [], install-server: true}
+  storage:
+    layout:
+      name: direct
+    swap:
+      size: 1G
+    config:
+      - id: disk_system
+        type: disk
+        ptable: gpt
+        path: /dev/vda
+        wipe: superblock
+        preserve: false
+        name: disk_system
+      - id: partition_system
+        type: partition
+        number: 1
+        device: disk_system
+        size: 100%
+        wipe: superblock
+        preserve: false
+        name: partition_system
+      - id: fs_system
+        type: format
+        fstype: ext4
+        preserve: false
+        #extra_options: []
+        volume: partition_system
+        label: fs_system
+      - id: mount_system
+        type: mount
+        path: /
+        device: fs_system
+        options: "noatime,errors=remount-ro"
+  updates: security
+  late-commands:
+    - echo "finished" > /target/tmp/continue.txt
+    - /usr/sbin/poweroff
+  user-data:
+    users:
+      - default
+      - name: <USER>
+        groups: sudo
+        shell: /bin/bash
+        sudo: ['ALL=(ALL) NOPASSWD:ALL']
+        ssh_import_id: None
+        ssh-authorized-keys:
+          - <MY_SSH_ACCESS_KEY>
+        lock_passwd: false

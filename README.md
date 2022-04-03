@@ -39,6 +39,13 @@ This adds some debian tar files to make a couple packages.
 ```
 git clone https://github.com/wezzels/deb_builder_xrdp_gpu.git
 sudo prep_system -u <user>
+
+time ./run_incr_make_updated_image.sh -t mkiso -o Ubuntu2004 -r ubuntu_setup_ISO.sh -g data/\cust*.iso
+rm data/focal_OS/new_image_ubuntu-20.04-server-cloudimg-amd64.img
+time ./run_cdrom_test.sh -t mkisotoimg -o Ubuntu2004
+time ./run_image_test.sh -t imgtest -o Ubuntu2004
+
+
 ./run_all.sh
 ```
 resulting times will be in run_times.txt

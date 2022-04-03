@@ -127,7 +127,10 @@ if [ ! -f "${IMG}" ]; then
 	      #  sha256sum -b ${IMG}
 fi
 
-#cp cloud-init/user-data .
+cp ${USER_DATA} ./user-data
+echo "access key = ${MY_SSH_ACCESS_KEY}"
+sed -i "s#<MY_SSH_ACCESS_KEY>#${MY_SSH_ACCESS_KEY}#" ./user-data
+sed -i "s#<USER>#${USER}#" ./user-data
 
 qemu-system-x86_64 \
   -cpu host \
@@ -170,6 +173,7 @@ ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -
 if [ "${SET_TASK}" = "mkiso" ]; then
 	if [ -f "${DATA_DIR}/${ISO}" ]; then
 		scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${DATA_DIR}/${ISO}  ${USER}@${HOST}:data/
+		scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ./user-data  ${USER}@${HOST}:.
 	fi
 fi
 

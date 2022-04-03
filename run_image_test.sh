@@ -184,9 +184,10 @@ qemu-system-x86_64 \
   -vga virtio \
   -net nic,model=virtio -net tap,ifname=tap0,script=no,downscript=no \
   -name "Build Linux" \
-  -vnc 127.0.0.1:2,password=on -monitor stdio \
+  -vnc 127.0.0.1:2 \
   -net user,hostfwd=tcp::${SSH_PORT}-:22 \
   -net nic \
+  -daemonize \
   -pidfile ./pid.${SSH_PORT}
 
 

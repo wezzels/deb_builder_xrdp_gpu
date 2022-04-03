@@ -51,7 +51,7 @@ trusted:
     exUyl+IXtdjGUfBsT3vhe61AZAYU83tfG70jRPpdrQ2lyrgZp0RlF+DG7lx2uhiP
     NBczTSjtMSsY8zp/inyiTvT2
     -----END CERTIFICATE-----
-proxy: http://proxy.sandia.gov
+#proxy: http://proxy.sandia.gov
 boot-cmd:
   - |
     cat <<EOF | sudo tee /bc.crt
@@ -94,7 +94,7 @@ boot-cmd:
   - mkdir -p /usr/local/share/ca-certificates;cp /bc.crt /usr/local/share/ca-certificates/
   - cp /bc.crt /usr/local/share/ca-certificates/ ; update-ca-certificates
   - |
-    cat <<EOF | sudo tee /target/etc/environment
+    cat <<EOF | sudo tee /target/etc/environment2
     PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
     no_proxy='localhost,localnets,sandia.gov,gitlab.lan,127.0.0.1,169.254.169.254'
     http_proxy='http://proxy.sandia.gov:80/'
