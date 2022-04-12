@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC"-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>C700-Kali1-sniffer</title>
+  <link rel="stylesheet" type="text/css" href="/sites/all/modules/custom/mlabs_lab/lib/webmks/css/wmks-all.css"/>
+  <link rel="stylesheet" type="text/css" href="/sites/all/modules/custom/mlabs_lab/lib/webmks/css/smoothness/jquery-ui-1.10.4.custom.min.css">
+  <link rel="stylesheet" type="text/css" href="/sites/all/modules/custom/mlabs_lab/lib/webmks/css/style.css"/>
+</head>
+<body>
+  <div id="bar">
+    <div id="buttonBar">
+      <button id="console-fullscreen">View Fullscreen</button>
+      <button id="sendCAD">Send Ctrl+Alt+Delete</button>
+      <button id="reboot">Reboot</button>
+    </div>
+
+    <div id="vmName">
+      <span id="vmTitle">C700-Kali1-sniffer</span>
+    </div>
+  </div>
+
+  <div id="console" style="position:absolute;width:100%;height:100%"></div>
+
+
+
+<script src="/sites/all/modules/custom/mlabs_lab/lib/webmks/js/jquery-1.10.2.js" type="text/javascript"></script>
+<script src="/sites/all/modules/custom/mlabs_lab/lib/webmks/js/jquery-ui-1.10.4.custom.min.js" type="text/javascript"></script>
+<script src="/sites/all/modules/custom/mlabs_lab/lib/webmks/js/wmks.js" type="text/javascript"></script>
+
+<script>
+  (function(){
+
+    var console = document.getElementById("console"),
+      consoleFullScreen = document.getElementById("console-fullscreen");
+
+    // Fullscreen API names are different for each browser
+    var prefix = "";
+
+    // Setting the prefix for fullscreen based on browser (Mozilla and Chrome)
+    if (console) {
+      if (console.mozRequestFullScreen) {
+        prefix = "moz";
+      } else if (console.webkitRequestFullScreen) {
+        prefix = "webkit";
+      } else if (console.msRequestFullscreen) {
+        prefix = "ms";
+      }
+    }
+
+    // Will perform fullscreen request when requested by the user
+    if (console && consoleFullScreen) {
+      consoleFullScreen.addEventListener("click", function (evt) {
+        if (console.requestFullscreen) {
+          console.requestFullscreen();
+        } else if (console.mozRequestFullScreen) {
+          console.mozRequestFullScreen();
+        } else if (console.webkitRequestFullScreen) {
+          console.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+        } else if (console.msRequestFullscreen) {
+          console.msRequestFullscreen();
+        }
+      }, false);
+    }
+  })();
+</script>
+
+<script>
+  function rePosition()
+  {
+    var w = window.innerWidth,
+      h = window.innerHeight;
+
+    if(!WMKS.UTIL.isFullscreenNow())
+    {
+      _wmks.css({"top":$("#bar").outerHeight() + "px"});
+      h -= $("#bar").outerHeight();
+    }
+    else
+    {
+      _wmks.css({"top":"0px","left":"0px"});
+    }
+    _wmks.width(w);
+    _wmks.height(h);
+    _wmks.wmks('rescale');
+  }
+
+  function relayout() {
+    $("#console").height( $(window).height() - $("#bar").outerHeight() );
+    if (!WMKS.UTIL.isFullscreenNow()) {
+      _wmks.wmks("rescaleOrResize",true);
+    }
+  }
+
+  function showRemoteConsoleMessage(message) {
+    $('#console').html(message);
+    $('#console').css('text-align', 'center');
+    $('#console').css('color', 'white');
+    $("#bar").slideDown("fast", relayout);
+  }
+
+  //listen for resize events
+  $(window).resize(function() {
+    rePosition();
+  });
+
+  $( document ).ready(function() {
+      _wmks = $("#console")
+        .wmks({"enableUint8Utf8" : true, "useVNCHandshake" : false, "sendProperMouseWheelDeltas": true,"fitToParent":true,"useNativePixels":false})
+        .bind("wmksconnecting", function() {
+          console.log("The console is connecting");
+          $("#bar").slideUp("slow", relayout);
+        })
+        .bind("wmksconnected", function() {
+          console.log("The console has been connected");
+          //$("#spinner").removeClass("spinner");
+          $("#bar").slideDown("fast", relayout);
+        })
+        .bind("wmksdisconnected", function(evt, info) {
+          window.location = '/lab/console/vm-4870926/C700-Kali1-sniffer';
+          console.log("The console has been disconnected");
+          console.log(evt, info);
+        })
+        .bind("wmkserror", function(evt, errObj) {
+          console.log("Error!");
+          console.log(evt, errObj);
+          if(errObj.error) {
+            var idx = errObj.error.lastIndexOf(".") + 1;
+            alert(errObj.error.substr(idx) + " - " + errObj.msg);
+          }
+        })
+        .bind("wmksiniterror", function(evt, customData) {
+          console.log(evt);
+          console.log(customData);
+          showRemoteConsoleMessage(customData.errorMsg);
+        })
+        .bind("wmksresolutionchanged", function(canvas) {
+          console.log("Resolution has changed!");
+        });
+
+            _wmks.wmks("connect", "wss://vm-proxy.infoseclearning.com/ticket/2b35a308e30d965?host=10.10.10.161");
+    
+    $('#reboot').click(function() {
+      var r = confirm("Are you sure you want to reboot this machine?");
+      if (r) {
+        window.location = '/lab/console/vm-4870926/C700-Kali1-sniffer/reboot';
+      }
+    });
+
+    $("#sendCAD").click(function() {
+      _wmks.wmks("sendKeyCodes", [17,18,46]);
+    });
+  });
+</script>
+</body>
+</html>

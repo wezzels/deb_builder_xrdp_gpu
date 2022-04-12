@@ -1,0 +1,8 @@
+
+
+https://www.redhat.com/en/blog/managing-virtual-machines-rhel-8-web-console
+
+https://github.com/cockpit-project/cockpit
+
+https://cockpit-project.org/external/source/HACKING
+

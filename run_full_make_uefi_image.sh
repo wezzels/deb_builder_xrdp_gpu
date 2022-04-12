@@ -1,5 +1,4 @@
 #!/bin/bash
-SAVE_INCR="no" # options: "yes" or "no"
 
 if [ "$EUID" -eq 0 ]
 then 
@@ -21,11 +20,11 @@ done
 
 if [ ! -z "${SHOW_HELP}" ]; then
 	echo "USAGE: ./run_cmd.sh -o <OSTYPE> -t <TASK> -r <RUN_SCRIPT> -p <PUT_FILES or DIRS> -g <GET_FILES or DIRS>"
-	echo "          -o (Alma8,CentOS8,RedHat8,Rocky8,Ubuntu2004)"
+	echo "          -o (Alma8,CentOS8,Rocky8,Ubuntu2004,Ubuntu2204)"
 	echo "          -t (image,mkiso,mkisotoimg,process)"
         echo "          -r script must be found in bin directory."
 	echo "          -p ex: *.iso Assets/ /tmp/*x11.lock"
-	echo "          -g ex: \\*.tgz data_dir/\\*.iso /tmp/\\*x11.lock"
+	echo "          -p ex: *.tgz data_dir/ /tmp/*x11.lock"
 fi
 
 
@@ -48,7 +47,7 @@ else
 fi
 
 IFS="|"
-os_array=("Alma8|CentOS8|RedHat8|Rocky8|Ubuntu2004|Ubuntu2204")
+os_array=("Alma8|CentOS8|Rocky8|Ubuntu2004|Ubuntu2204")
 if [ ! -z "${SET_OS}" ]; then
 	if [[ "${IFS}${os_array[*]}${IFS}" =~ "${IFS}${SET_OS}${IFS}" ]]; then
     		. ./cfgs/${SET_OS}Linux.cfg
@@ -65,7 +64,9 @@ fi
 if [ ! -z "${RUN_CMD}" ]; then
 	if [ ! -e bin/"${RUN_CMD}" ]; then
     		echo "${RUN_CMD} is not found in bin/"
+		exit 1
 	else
+		echo "using prompt "
 		RUN_SCRIPT="${RUN_CMD}"
 	fi
 else 
@@ -96,9 +97,7 @@ echo "user-data file   = ${USER_DATA}"
 echo "port for ssh     = ${SSH_PORT}"
 echo "script to run    = ${RUN_SCRIPT}"
 echo "name of sha file = ${FULL_RUN_SHA}"
-echo "vnc port         = ${VNC_PORT}"
-#cp cloud-init/user-data .
-echo "access key       = ${MY_SSH_ACCESS_KEY}"
+
 
 #if [ "$SET_FILES" == "yes" ]
 
@@ -114,38 +113,69 @@ kill $( ps -ef | grep qemu-system-x86_64 | xargs | cut -d" " -f2 )
 #Cleanup old files if they exist.
 rm -f pid.23* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
 
-if [ ! -f "${DATA_DIR}/${INCR_IMG}" ]; then
-	  echo "Incr_image is not found. Must run a full first."
-	    exit
+# Get image file from internet if not already downloaded.
+if [ ! -f "${DATA_DIR}/${IMG}" ]; then
+  wget -O "${DATA_DIR}/${IMG}" "${IMG_URL}"	
 fi
 
-# get incr and show sha512 hashs of copy and original.
+#Increase the size of the image.  
 if [ ! -f "${IMG}" ]; then
-	  rsync -av ${DATA_DIR}/${INCR_IMG} ${IMG}
-	    echo "SHA validation"
-	      cat ${DATA_DIR}/${FULL_RUN_SHA}
-	      #  sha256sum -b ${DATA_DIR}/${INCR_IMG}
-	      #  sha256sum -b ${IMG}
+  cp ${DATA_DIR}/${IMG} ${IMG}
+  qemu-img resize "${IMG}" +${IMG_SIZE}
 fi
 
-cp ${USER_DATA} ./user-data
-echo "access key = ${MY_SSH_ACCESS_KEY}"
-sed -i "s#<MY_SSH_ACCESS_KEY>#${MY_SSH_ACCESS_KEY}#" ./user-data
-sed -i "s#<USER>#${USER}#" ./user-data
+if [ ! -f "${USER_DATA}" ]; then
+echo "instance-id: $(uuidgen || echo i-softbuild)" > meta-data
+  cat >user-data <<EOF
+#cloud-config
+users:
+  - default
+  - name: ${USER}
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_import_id: None
+    ssh-authorized-keys:
+      - `cat /home/${USER}/.ssh/id_ed25519.pub`
+    lock_passwd: false
+package_upgrade: true
+package_update: true
+runcmd:
+  - [ touch, /tmp/continue.txt ]
+#    - [ chmod, +x ,/tmp]
+EOF
+fi
 
+#cp cloud-init/user-data
+echo "access key = ${MY_SSH_ACCESS_KEY}"
+sed -i "s#<MY_SSH_ACCESS_KEY>#${MY_SSH_ACCESS_KEY}#" user-data
+
+if [ "${SET_TASK}" = "mkisotoimg" ]; then
+	LOAD_TYPE=" -cdrom ${DATA_DIR}/${ISO_NEW} -boot d "
+else
+	LOAD_TYPE="-drive file=${DATA_DIR}/cloud.img,if=virtio "
+fi
+
+cloud-localds --disk-format qcow2 ${DATA_DIR}/cloud.img "${USER_DATA}" 
 qemu-system-x86_64 \
   -cpu host \
   -drive file="${IMG}",if=virtio \
   -m 2G \
+  -bios /usr/share/OVMF/OVMF_CODE.fd \
+  -drive file=${DATA_DIR}/cloud.img,if=virtio \
   -enable-kvm \
   -smp 2 \
   -vga virtio \
-  -name "Incr build Server" \
-  -vnc 127.0.0.1:${VNC_PORT} \
+  -net nic,model=virtio -net tap,ifname=${NET_TAP},script=no,downscript=no \
+  -name "Build Linux" \
+  -vnc 127.0.0.1:2 \
   -net user,id=${NET_TAP},hostfwd=tcp::${SSH_PORT}-:22 \
   -net nic \
   -daemonize \
   -pidfile ./pid.${SSH_PORT}
+
+  #-spice port=5902,password=password \
+  #-vnc 127.0.0.1:2, password \
 
 echo "Not sure how long to wait. Waiting around 20 seconds."
 sleep 15
@@ -162,7 +192,6 @@ until [ "`ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${S
 do
         echo -ne "$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r"
         date2=$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)
-	ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST} sudo touch /tmp/continue.txt
         sleep 1
 done
 
@@ -171,10 +200,9 @@ scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/nul
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST} mkdir -p data && rm -f zerofile
 
 if [ "${SET_TASK}" = "mkiso" ]; then
-	if [ -f "${DATA_DIR}/${ISO}" ]; then
-		scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${DATA_DIR}/${ISO}  ${USER}@${HOST}:data/
-		scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ./user-data  ${USER}@${HOST}:.
-	fi
+        if [ -f "${DATA_DIR}/${ISO}" ]; then
+                scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${DATA_DIR}/${ISO}  ${USER}@${HOST}:data/
+        fi
 fi
 
 if [  ! -z "$KS" ]; then
@@ -183,11 +211,11 @@ if [  ! -z "$KS" ]; then
        scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${KS} ${USER}@${HOST}:ks.cfg
   fi
 fi
+
 echo "--- Running ${RUN_SCRIPT}."
 ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} chmod +x /home/${USER}/${RUN_SCTIPT}
 ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo bash /home/${USER}/${RUN_SCRIPT}
 echo "--- Finished ${RUN_SCRIPT}."
-
 
 if [ ! "${GET_FILES}" = " " ]; then
   scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${USER}@${HOST}:${GET_FILES} ${DATA_DIR}/
@@ -199,37 +227,32 @@ fi
 
 
 echo "--- Starting disk cleanup."
-if [ "${SAVE_INCR}" = "yes" ]; then
-	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo rm -rf data
-	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo swapoff -a
-	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo rm /swap*
-	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo sync
-	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo sync
-	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} dd if=/dev/zero of=zerofile bs=1M
-	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} rm -f zerofile
-	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} echo "sleeping..."
-	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo sync
-	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo sync
-	ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sleep 10
-fi
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo rm -rf data
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo swapoff -a
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo rm /swap*
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo sync
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}  ${USER}@${HOST} sudo sync
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} dd if=/dev/zero of=zerofile bs=1M
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} rm -f zerofile
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} echo "sleeping..."
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo sync
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo sync
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sleep 10
 echo "--- poweroff"
 ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} ${USER}@${HOST} sudo  poweroff
 echo "--- Finished disk cleanup. Shutting down. "
 
+
 # Umm causes error. Needs looking into. 
 #timeout 30 wait $( cat pid.${SSH_PORT} )
 kill $( cat pid.${SSH_PORT} )
+sync
+sync
+time qemu-img convert -O qcow2 -p -c ${IMG} ${DATA_DIR}/incr_${IMG}
+#rsync -av ${IMG} ${DATA_DIR}/incr_pre_${IMG}
 
-if [ "${SAVE_INCR}" = "yes" ]; then
-	sync
-	sync
-	time qemu-img convert -O qcow2 -p ${IMG} ${DATA_DIR}/incr_${IMG}
-	#rsync -av ${IMG} ${DATA_DIR}/incr_pre_${IMG}
-
-	ls -al ${DATA_DIR}
-	#sha256sum -b ${DATA_DIR}/incr_${IMG}
-	echo "`sha256sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
-fi
+#sha256sum -b ${DATA_DIR}/incr_${IMG}
+echo "`sha256sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
 
 echo "Wait time was: ${date2}"
 echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"

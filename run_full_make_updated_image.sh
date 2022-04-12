@@ -20,7 +20,7 @@ done
 
 if [ ! -z "${SHOW_HELP}" ]; then
 	echo "USAGE: ./run_cmd.sh -o <OSTYPE> -t <TASK> -r <RUN_SCRIPT> -p <PUT_FILES or DIRS> -g <GET_FILES or DIRS>"
-	echo "          -o (Alma8,CentOS8,Rocky8,Ubuntu2004)"
+	echo "          -o (Alma8,CentOS8,Rocky8,Ubuntu2004,Ubuntu2204)"
 	echo "          -t (image,mkiso,mkisotoimg,process)"
         echo "          -r script must be found in bin directory."
 	echo "          -p ex: *.iso Assets/ /tmp/*x11.lock"
@@ -47,7 +47,7 @@ else
 fi
 
 IFS="|"
-os_array=("Alma8|CentOS8|Rocky8|Ubuntu2004")
+os_array=("Alma8|CentOS8|RedHat8|Rocky8|Ubuntu2004|Ubuntu2204")
 if [ ! -z "${SET_OS}" ]; then
 	if [[ "${IFS}${os_array[*]}${IFS}" =~ "${IFS}${SET_OS}${IFS}" ]]; then
     		. ./cfgs/${SET_OS}Linux.cfg
@@ -97,8 +97,8 @@ echo "user-data file   = ${USER_DATA}"
 echo "port for ssh     = ${SSH_PORT}"
 echo "script to run    = ${RUN_SCRIPT}"
 echo "name of sha file = ${FULL_RUN_SHA}"
-
-
+echo "vnc port         = ${VNC_PORT}"
+echo "access key       = ${MY_SSH_ACCESS_KEY}"
 #if [ "$SET_FILES" == "yes" ]
 
 #fi	
@@ -123,8 +123,12 @@ if [ ! -f "${IMG}" ]; then
   cp ${DATA_DIR}/${IMG} ${IMG}
   qemu-img resize "${IMG}" +${IMG_SIZE}
 fi
+if [ ! -f "cloud-init/${USER_DATA}" ]; then
+	        rm -f user-data
+		cp "cloud-init/${USER_DATA}" user-data
+fi
 
-if [ ! -f "${USER_DATA}" ]; then
+if [ ! -f "user-data" ]; then
 echo "instance-id: $(uuidgen || echo i-softbuild)" > meta-data
   cat >user-data <<EOF
 #cloud-config
@@ -147,8 +151,8 @@ EOF
 fi
 
 #cp cloud-init/user-data
-echo "access key = ${MY_SSH_ACCESS_KEY}"
 sed -i "s#<MY_SSH_ACCESS_KEY>#${MY_SSH_ACCESS_KEY}#" user-data
+sed -i "s#<USER>#${USER}#" ./user-data
 
 if [ "${SET_TASK}" = "mkisotoimg" ]; then
 	LOAD_TYPE=" -cdrom ${DATA_DIR}/${ISO_NEW} -boot d "
@@ -156,7 +160,7 @@ else
 	LOAD_TYPE="-drive file=${DATA_DIR}/cloud.img,if=virtio "
 fi
 
-cloud-localds --disk-format qcow2 ${DATA_DIR}/cloud.img "${USER_DATA}" 
+cloud-localds --disk-format qcow2 ${DATA_DIR}/cloud.img user-data 
 qemu-system-x86_64 \
   -cpu host \
   -drive file="${IMG}",if=virtio \
@@ -165,15 +169,15 @@ qemu-system-x86_64 \
   -enable-kvm \
   -smp 2 \
   -vga virtio \
-  -net nic,model=virtio -net tap,ifname=${NET_TAP},script=no,downscript=no \
-  -name "Build Linux" \
-  -vnc 127.0.0.1:2 \
+  -name "Full build Linux" \
+  -vnc 127.0.0.1:${VNC_PORT} \
   -net user,id=${NET_TAP},hostfwd=tcp::${SSH_PORT}-:22 \
   -net nic \
   -daemonize \
   -pidfile ./pid.${SSH_PORT}
 
   #-spice port=5902,password=password \
+  #-net nic,model=virtio -net tap,ifname=${NET_TAP},script=no,downscript=no \
   #-vnc 127.0.0.1:2, password \
 
 echo "Not sure how long to wait. Waiting around 20 seconds."

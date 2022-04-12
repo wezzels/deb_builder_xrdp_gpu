@@ -105,6 +105,7 @@ echo "my key file      = ${MY_KEY}"
 echo "my key file      = ${MY_SSH_ACCESS_KEY}"
 echo "my ssh options   = ${MY_OPTS_SSH}"
 echo "TAP0 name        = ${NET_TAP}"
+echo "VNC PORT         = ${VNC_PORT}"
 
 
 #if [ "$SET_FILES" == "yes" ]
@@ -115,7 +116,7 @@ echo "TAP0 name        = ${NET_TAP}"
 mkdir -p $DATA_DIR
 
 #Kill all processes that could cause an issue.  Will need to be narrowed done later. 
-kill $( ps -ef | grep qemu-system-x86_64 | xargs | cut -d" " -f2 )
+kill $( ps -ef | grep qemu-system-x86_64 | grep ${IMG}| xargs | cut -d" " -f2 )
 
 
 #Cleanup old files if they exsist.
@@ -185,8 +186,8 @@ qemu-system-x86_64 \
   -vga virtio \
   -net nic,model=virtio -net tap,ifname=${NET_TAP},script=no,downscript=no \
   -name "Build Linux" \
-  -vnc 127.0.0.1:2   \
-  -net user,id=${NET_TAP},hostfwd=tcp::${SSH_PORT}-:22 \
+  -vnc 127.0.0.1:${VNC_PORT}   \
+  -net user,hostfwd=tcp::${SSH_PORT}-:22 \
   -net nic \
   -daemonize \
   -pidfile ./pid.${SSH_PORT}
