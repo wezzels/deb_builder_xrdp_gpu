@@ -3,6 +3,8 @@ data/
 *.img
 *.qcow2
 *.vmdk
+.htaccess
+.htpasswd
 user-data
 meta-data
 pid.*

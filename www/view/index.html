@@ -1,0 +1,98 @@
+<html>
+  <head>
+    <!-- A real extension would not be able to link to external CDNs; we just do it here for simplicity -->
+    <script src="libs/lodash.min.js"></script>
+    <script src="libs/muxy-extensions.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
+      crossorigin="anonymous"></script>
+  </head>
+
+  <body>
+    <p>Pressing 'Increment' will send an accumulation request.</p>
+
+    <button id="increment">Increment</button>
+
+    <hr />
+
+    <div id="messageB" style="background: yellow; color: red">&nbsp;</div>
+
+    <hr />
+
+    <div style="color: blue">
+      <button id="btn1">0</button>
+      <button id="btn2">1</button>
+      <button id="btn3">2</button>
+      <button id="btn4">31</button>
+    </div>
+
+    <script type="text/javascript">
+      Muxy.setup({ extensionID: 'xyphukhqzv4tl044h0vxdrj945zbpr' });
+      const sdk = new Muxy.SDK();
+
+      const increment = _.debounce(function () {
+        sdk.accumulate('simple_counter', {}); // We're not sending any actual data in our accumulated objects - we're just going to count the number of objects that have accumulated
+      }, 250);
+
+      document.querySelector('#increment').addEventListener('click', increment);
+
+
+      /**
+       * Vote
+       */
+      const voteCount = _.debounce(function () {
+        sdk.getVoteData('votingDukeTest').then((voteData) => {
+          console.log('Vote number -> ', voteData);
+        });
+      });
+      setInterval(voteCount, 2000);
+
+
+      /**
+       * Listen a message
+       */
+      _.debounce(function () {
+        sdk.listen('broadcastMessage', (data) => {
+          console.log(data);
+          document.querySelector('#messageB').innerHTML = data.message;
+        });
+      }, 250)();
+
+      /**
+       * Vote
+       */
+      const vote = function (e) {
+        var voteId = parseInt(this.innerHTML);
+        console.log(parseInt(this.innerHTML));
+        sdk.vote('votingDukeTest', voteId);
+      };
+      
+      document.querySelector('#btn1')
+        .addEventListener('click', vote);
+      document.querySelector('#btn2')
+        .addEventListener('click', vote);
+      document.querySelector('#btn3')
+        .addEventListener('click', vote);
+      document.querySelector('#btn4')
+        .addEventListener('click', vote);
+
+
+      /**
+       * Storage
+       */
+      const resp = _.debounce(function () {
+        sdk.getJSONStore('awesome_server_action').then((resp) => {
+          console.log(resp);
+        });
+        sdk.getJSONStore('dukestore').then((resp) => {
+          console.log(resp);
+        });
+      }, 1000);
+      // setInterval(resp, 2000);
+      resp();
+
+
+    </script>
+  </body>
+</html>

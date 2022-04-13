@@ -1,39 +1,51 @@
 .menu {
   display: flex;
-  justify-content: center;
+  justify-content: left;
   width: 90%;
-  background: #e82c54;
+  background: #c8c8c8;
   margin: 0 auto;
   line-height: 20px;
   align-items: center;
   margin-left: 100px;
 }
 
-.menu1, .menu3, .menu4, .menu5, .subMenu1 { 
-    background-color: #E82C54; 
-    color: white; 
+.menu3, .menu4, .menu5 { 
+    background-color: #c8c8c8; 
+    color: black; 
     font-family: Century Gothic, CenturyGothic, AppleGothic,       sans-serif; 
-    font-size:15px; 
+    font-size:25px; 
     font-style: normal; 
     font-variant: normal; 
     font-weight: 700; 
     line-height: 26.4px; 
     border: none; 
     border-radius: 30px; 
-    width: 90px;
+    width: 140px;
+}
+.subMenu1 {
+    background-color: #a818c8;
+    color: black;
+    font-family: Century Gothic, CenturyGothic, AppleGothic,       sans-serif;
+    font-size:15px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 700;
+    line-height: 26.4px;
+    border: none;
+    border-radius: 30px;
+    width: 150px;
 }
 
-}
-.menu2 {
-    color: white;
+.menu1, .menu2 {
+	
+    color: black;
     border: none;
     cursor: pointer;
     margin-top:20px;
 }
 
-}
-.menu2btn:hover {
-    background-color: #e82c54;
+.menu1btn:hover, .menu2btn:hover {
+    background-color: #c8c8c8;
 }
 .dropdown {
   position: relative;
@@ -42,11 +54,11 @@
 .dropdown-child {
     display: none;
     position: absolute;
-    background-color:#e82c54;
+    background-color:#c8c8c8;
     min-width: 100px;
 }
 .dropdown-child a {
-    color: #e82c54;
+    color: #c8c8c8;
     padding: 10px;
     text-decoration: none;
     display: block;
@@ -57,21 +69,21 @@
 }
 
 body {
-  background: #e82c54;
+  background: #c8c8c8;
   margin: 0 auto;
   min-width:600px;
-  max-width:2000px}
+  max-width:2000px
 }
 
 .logo {
   width: 30%;
 }
 
-.menu2 {
-  background-color: #e82c54;
-  color: white;
+.menu1, .menu2 {
+  background-color: #c8c8c8;
+  color: black;
   font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif;
-  font-size: 15px;
+  font-size: 25px;
   font-style: normal;
   font-variant: normal;
   font-weight: 700;
@@ -79,7 +91,7 @@ body {
   border: none;
 }
 
-.comeceAgora {
+.StartAProject {
   background-color: #2a2929; 
   color: white; 
   font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif; 
@@ -98,7 +110,7 @@ body {
   margin-top: 28%;
 }
 
-.botaoLeiaMais, .botaoCarreiras {
+.ReadMoreBTN, .HelpUSBTN {
   color: white; 
   font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif; 
   font-size:15px; 
@@ -119,7 +131,7 @@ body {
   height: 30px; 
 }
 
-.botaoCadastrar {
+.StartAProject1 {
   width: 30%;
 }
 
@@ -129,25 +141,25 @@ body {
 }
 
 .component1 {
-  background: #e82c54;
+  background: #c8c8c8;
   display: flex;
 }
 
 .component2 {
-  background: #e82c54;
+  background: #c8c8c8;
  }
 
-.investir {
+.investor {
   margin-top: 10%;
-  margin-color: #e82c54;
+  margin-color: #c8c8c8;
   padding: 50px;
   background: #2a2929;
   display: flex;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
 }
 
-.botaoFooter {
-  color: white; 
+.FooterBTN {
+  color: black; 
   font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif; 
   font-size:15px; 
   font-style: normal; 
@@ -155,8 +167,8 @@ body {
   font-weight: 700; 
   line-height: 26.4px; 
   left: 45%; 
-  background-color: #e82c54; 
-  color: white; 
+  background-color: #c8c8c8; 
+  color: black; 
   border-radius: 30px;
   width: 140px; 
   height: 40px; 
