@@ -23,8 +23,8 @@
     width: 140px;
 }
 .subMenu1 {
-    background-color: #a818c8;
-    color: black;
+    background-color: #181818;
+    color: gray;
     font-family: Century Gothic, CenturyGothic, AppleGothic,       sans-serif;
     font-size:15px;
     font-style: normal;
@@ -91,7 +91,7 @@ body {
   border: none;
 }
 
-.StartAProject {
+.1StartAProjectBTN {
   background-color: #2a2929; 
   color: white; 
   font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif; 
@@ -100,17 +100,20 @@ body {
   font-variant: normal; 
   font-weight: 700; 
   line-height: 26.4px; 
-  border-color: #E82C54; 
+  border-color: #484848; 
   border-radius: 25px; 
-  left: 8%; 
-  right: 0.6rem; 
+  left: -21%; 
   width: 140px; 
   height: 40px; 
   position: absolute; 
-  margin-top: 28%;
+  display: flex;
+   justify-content: center;
+   align-items: center;
+  margin-top: 38%;
+  margin-left: 30%
 }
 
-.ReadMoreBTN, .HelpUSBTN {
+.StartAProjectBTN,.ReadMoreBTN, .HelpUSBTN {
   color: white; 
   font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif; 
   font-size:15px; 
@@ -131,7 +134,7 @@ body {
   height: 30px; 
 }
 
-.StartAProject1 {
+.madsci {
   width: 30%;
 }
 
@@ -166,13 +169,13 @@ body {
   font-variant: normal; 
   font-weight: 700; 
   line-height: 26.4px; 
-  left: 45%; 
+  left: 25%; 
   background-color: #c8c8c8; 
   color: black; 
   border-radius: 30px;
   width: 140px; 
   height: 40px; 
-  margin-left: 300%; 
+  margin-left: 30%; 
   margin-top: 40%
   
 }

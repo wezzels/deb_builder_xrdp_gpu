@@ -1,4 +1,9 @@
 data/
+www/web_test/vnc/core/
+www/web_test/vnc/app/
+www/web_test/vnc/t.php  
+www/web_test/vnc/utils/  
+www/web_test/vnc/vendor/ 
 *.tgz
 *.img
 *.qcow2

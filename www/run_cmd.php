@@ -1,6 +1,6 @@
 <?php
 
-$cmd = "cd .. && ./run_full_make_updated_image.sh -t image -o CentOS8 -r centos_setup_ISO.sh -g data/\cust*.iso";
+$cmd = "./run_full_make_updated_image.sh -t image -o CentOS8 -r centos_setup_ISO.sh -g data/\cust*.iso &> tmp-file && mv tmp-file tmp-file.completed &";
 
 $descriptorspec = array(
    0 => array("pipe", "r"),   // stdin is a pipe that the child will read from

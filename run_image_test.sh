@@ -82,6 +82,16 @@ if [ -z "${GET_FILES}" ]; then
     	GET_FILES=" "
 fi
 
+if [ -z "${USER}" ]; then
+        USER="builder"
+fi
+
+if [ ! -f "${DATA_DIR}/sshkey" ]; then
+        ssh-keygen -b 4096 -t ed25519 -f ${DATA_DIR}/sshkey -q -N ""
+fi
+MY_KEY="${DATA_DIR}/sshkey"
+MY_SSH_ACCESS_KEY="`cat ${DATA_DIR}/sshkey.pub`"
+
 echo "os type          = ${SET_OS}"
 echo "task type        = ${SET_TASK}"
 echo "get files        = ${GET_FILES}" 
