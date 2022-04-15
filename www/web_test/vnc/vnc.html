@@ -6,10 +6,10 @@ if ( is_numeric("$output") ) {
         console.log("vnc for this port is already running.");
 } else {
 	$output=shell_exec("/usr/bin/python3 /usr/bin/websockify 127.0.0.1:608". $_GET['pport']." 127.0.0.1:590". $_GET['pport'].
-	" --cert /home/wez/test_build/ssl/alt_cert.pem --key /home/wez/test_build/ssl/alt_key.pem  > /dev/null 2>&1 & ");
+	" --cert ../../../ssl/alt_cert.pem --key ../../../ssl/alt_key.pem  > /dev/null 2>&1 & ");
 //	$output=shell_exec("./utils/novnc_proxy --listen 127.0.0.1:608". $_GET['pport']." --vnc 127.0.0.1:590". $_GET['pport'].
 //		" --cert /home/wez/test_build/ssl/alt_cert.pem --key /home/wez/test_build/ssl/alt_key.pem  > /dev/null 2>&1 & ");
-echo "Output is:$output";
+//echo "Output is:$output";
 }
 //  vnc/utils/novnc_proxy --listen 127.0.0.1:6080 --vnc 127.0.0.1:5900 &
 //  kill $( ps -ef | grep websockify | grep 5900 | xargs | cut -d" " -f2 )
