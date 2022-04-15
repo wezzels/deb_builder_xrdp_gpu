@@ -1,7 +1,7 @@
 <?php
 
 $output=shell_exec("ps -ef | grep websockify | grep 590". $_GET['pport']." | xargs | cut -d\" \" -f2");
-echo "Running pid is:$output";
+//echo "Running pid is:$output";
 if ( is_numeric("$output") ) {
         console.log("vnc for this port is already running.");
 } else {
