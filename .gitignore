@@ -4,6 +4,7 @@ www/web_test/vnc/app/
 www/web_test/vnc/t.php  
 www/web_test/vnc/utils/  
 www/web_test/vnc/vendor/ 
+www/old/
 *.tgz
 *.img
 *.qcow2

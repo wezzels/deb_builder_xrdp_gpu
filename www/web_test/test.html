@@ -1,0 +1,23 @@
+<html>
+	<script src="js/jquery-1.4.4.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    $(function(){
+       $('.record').mouseover(function(e){
+          var selectedRecordID = $(this).data('id');
+          $("#divDisplayInfo").load("vnc/?resize=remote&path=server4/websockify&pport=4",
+                                 { recordID: selectedRecordID },
+                                 function(){
+                                     $(this).css({left:e.pageX+'px', top:e.pageY+'px'});
+                                 });
+       });
+   });
+  </script>
+  <style type="text/css">#divDisplayInfo{position:absolute;}</style>
+  <body>
+   <a href="#" class="record" data-id="1">Record 1</a>
+   <a href="#" class="record" data-id="2">Record 2</a>
+   <a href="#" class="record" data-id="3">Record 3</a>
+
+   <div id="divDisplayInfo" style=""></div>
+  </body>
+</html>

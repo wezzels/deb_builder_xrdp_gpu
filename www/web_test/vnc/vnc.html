@@ -1,4 +1,12 @@
 <?php
+session_start();
+if (!$_SESSION["user_name"]) {
+  header("Location:../index.php");
+}
+?>
+
+
+<?php
 
 $output=shell_exec("ps -ef | grep websockify | grep 590". $_GET['pport']." | xargs | cut -d\" \" -f2");
 //echo "Running pid is:$output";

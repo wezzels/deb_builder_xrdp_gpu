@@ -1,0 +1,40 @@
+<div class="bar">
+	 <a href="index.php?login" id="my_userarea">Log In</a>
+</div>
+<div style="display: none;" id="my_panel">
+    <div class="column">
+        <h3></h3>
+	<p>Developing STIGS with a chicken and eggs process.  continuos building (hardening image) -> (hardening iso) -> repeat (hardening image) </p>
+        <p><a class="more" href="#about.php" rel="nofollow"><span>Read more</span></a></p>
+    </div>
+    <div class="column">
+        <form class="login_form" action="index.php" method="post">
+            <h3>Log In</h3>
+            <label>Nickname:</label><input type="text" name="username">
+            <label>Password:</label><input type="password" name="password">
+            <input type="submit" name="LogIn" value="Login">
+            <a class="more" href="#help.php" rel="nofollow"><span>Need Help?</span></a>
+        </form>
+    </div>
+    <div class="column">
+	    <h3>Want to work on STIGs?<br> Join us!</h3>
+        <p>DISA STIGS tool to develop and test different variations.  Give it a try and see if you like it.</p>
+        <p align="center"><a class="more" href="#requestaccess.php" rel="nofollow"><span>Request Access</span></a></p>
+    </div>
+    <div style="clear:both"></div>
+    <hr>
+    <div class="close"><a id="my_close" class="my_close">Close login</a></div>
+</div>
+<script language="javascript" type="text/javascript">
+$(document).ready(function() {
+    $('#my_userarea').click(function(){
+        $('div#my_panel').slideToggle('slow');
+        return false;
+    });
+    $('#my_close').click(function(){
+        $('div#my_panel').slideUp('slow');
+        return false;
+    });
+});
+</script>
+<h3>Domain connection is turned off. Use User1 or User2 for testing access.</h3>

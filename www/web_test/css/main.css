@@ -1,0 +1,19 @@
+body{background-color:#888;margin:0;padding:0}
+.example{position:relative;width:980px;height:700px;background-image:url(../images/background.jpg);border:1px #000 solid;margin:20px auto;padding:20px;-moz-border-radius:3px;-webkit-border-radius:3px}
+.bar{background-color:#444;height:24px;padding:10px}
+a#bar_btn{font-size:12px;position:relative;display:block;overflow:hidden;color:#909090;background-color:#444;height:24px;padding:10px}
+a#my_userarea{font-size:12px;position:relative;display:block;overflow:hidden;color:#909090;-webkit-border-radius:11px;-moz-border-radius:11px;text-decoration:none;border-radius:11px;background:url(../images/button-user-area.gif) repeat-x 0 0;text-shadow:#000 1px 1px;float:right;padding:4px 10px 3px}
+button#my_console{font-size:22px;position:relative;display:block;overflow:hidden;color:#909090;-webkit-border-radius:11px;-moz-border-radius:11px;text-decoration:none;border-radius:11px;background:url(../images/button-user-area.gif) repeat-x 0 0;text-shadow:#000 1px 1px;float:left;padding:4px 10px 3px}
+a#my_logo{font-size:12px;position:relative;display:block;overflow:hidden;color:#909090;-webkit-border-radius:11px;-moz-border-radius:11px;text-decoration:none;border-radius:11px;text-shadow:#000 1px 1px;float:left;padding:4px 10px 3px}
+#my_panel{background-color:#272727;border:1px solid #444;color:#999;font-size:.85em;z-index:1001;padding:15px;position:absolute;width:948px}
+#my_panel .column{float:left;width:30%;padding:15px}
+#my_panel .column h3{color:#fff}
+#my_panel .login_form input,#my_panel .login_form label{margin-bottom:5px;display:block}
+#my_panel input[type=text],#my_panel input[type=password]{width:200px}
+#my_panel input[type=submit]{background:url(../images/button.png) no-repeat scroll right 0 transparent;width:72px;height:30px;color:#fff;border-width:0}
+.more{background:url(../images/more-left.png) no-repeat scroll 0 0 transparent;cursor:pointer;display:block;float:right;padding-left:11px;text-align:center;text-decoration:none}
+.more span{background:url(../images/more-right.png) no-repeat scroll right 0 transparent;color:#fff;display:block;height:30px;line-height:29px;padding:0 19px 0 8px}
+.more:hover{text-decoration:none;background-position:0 bottom}
+.more:hover span,#my_panel input[type=submit]:hover{background-position:right bottom}
+#my_panel .close{text-align:center}
+#my_panel .close a{color:#07BBE2;cursor:pointer}

@@ -1,0 +1,12 @@
+
+#bedim {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+#bedim img {
+    position: relative;
+    top: 0px;
+    right: 0px;
+}
+
