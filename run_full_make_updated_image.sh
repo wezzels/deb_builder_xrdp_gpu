@@ -28,15 +28,14 @@ done
 if [ ! -z "${SHOW_HELP}" ]; then
 	echo "USAGE: ./run_cmd.sh -o <OSTYPE> -t <TASK> -r <RUN_SCRIPT> -p <PUT_FILES or DIRS> -g <GET_FILES or DIRS>"
 	echo "          -o (Alma8,CentOS8,Rocky8,Ubuntu2004,Ubuntu2204)"
-	echo "          -t (image,mkiso,mkisotoimg,process)"
+	echo "          -t (image,sshto,scpto,stigit,mkiso,mkisotoimg,process)"
         echo "          -r script must be found in bin directory."
 	echo "          -p ex: *.iso Assets/ /tmp/*x11.lock"
 	echo "          -p ex: *.tgz data_dir/ /tmp/*x11.lock"
 fi
 
-
 IFS="|"
-task_array=("image|mkiso|mkisotoimg|process")
+task_array=("image|sshto|scpto|stigit|mkiso|mkisotoimg|process")
 if [ ! -z "${SET_TASK}" ]; then
         if [[ "${IFS}${task_array[*]}${IFS}" =~ "${IFS}${SET_TASK}${IFS}" ]]; then
                 #./bin/${SET_TASK}Linux.sh
@@ -68,6 +67,26 @@ else
   exit 1  
 fi
 
+IS_RUNNING=`ps -ef | grep qemu-system-x86_64 | grep ${SSH_PORT} | xargs`
+IFS="|"
+task_list=("sshto|scpto|stigit")
+if [ -z "${RUN_TASK}" ]; then
+	if [[ "${IFS}${task_list[*]}${IFS}" =~ "${IFS}${RUN_TASK}${IFS}" ]]; then
+		RUN_CMD="not needed."
+		if [ ! -z "${IS_RUNNING}" ]; then
+                	if [ "sshto" = "${RUN_TASK}"]; then
+			   echo "ssh into running VM. Warning this connect will close when the standard task is done."
+                           ssh 127.0.0.1 -i ./data/centos8stream/sshkey   -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}
+			elif [ "scpto" = "${RUN_TASK}"]; then
+                	   echo "Copy files to VM"
+			elif [ "stigit" = "${RUN_TASK}"]; then
+                	   echo "Not sure howto run this yet."
+			fi
+		exit 1
+		fi
+        fi
+fi
+
 if [ ! -z "${RUN_CMD}" ]; then
 	if [ ! -e bin/"${RUN_CMD}" ]; then
     		echo "${RUN_CMD} is not found in bin/"
@@ -94,7 +113,8 @@ if [ -z "${USER}" ]; then
 fi
 
 if [ ! -f "${DATA_DIR}/sshkey" ]; then 
-	ssh-keygen -b 4096 -t ed25519 -f ${DATA_DIR}/sshkey -q -N ""
+	ssh-keygen -q -t rsa -N '' -f ${DATA_DIR}/sshkey <<<y >/dev/null 2>&1
+	#ssh-keygen -b 4096 -t ed25519 -f ${DATA_DIR}/sshkey -q -N ""
 fi
 MY_KEY="${DATA_DIR}/sshkey"
 MY_SSH_ACCESS_KEY="`cat ${DATA_DIR}/sshkey.pub`"
@@ -132,7 +152,11 @@ rm -f pid.23* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
 
 # Get image file from internet if not already downloaded.
 if [ ! -f "${DATA_DIR}/${IMG}" ]; then
-  wget -O "${DATA_DIR}/${IMG}" "${IMG_URL}"	
+	if [ $IMG_URL = "" ]; then
+		cp files/${IMG} ./${IMG} 
+	else
+  		wget -O "${DATA_DIR}/${IMG}" "${IMG_URL}"	
+	fi
 fi
 
 #Increase the size of the image.  
@@ -159,8 +183,8 @@ users:
     ssh-authorized-keys:
       - `cat ${DATA_DIR}/sshkey.pub`
     lock_passwd: false
-package_upgrade: true
-package_update: true
+package_upgrade: false
+package_update: false
 runcmd:
   - [ touch, /tmp/continue.txt ]
 #    - [ chmod, +x ,/tmp]
@@ -215,8 +239,27 @@ do
         sleep 1
 done
 
+IFS="|"
+task_list=("sshto|scpto|stigit")
+if [ ! -z "${RUN_TASK}" ]; then
+        if [[ "${IFS}${task_list[*]}${IFS}" =~ "${IFS}${RUN_TASK}${IFS}" ]]; then
+		if [ "sshto" = "${RUN_TASK}"]; then
+                   echo "ssh into running VM. Exit the ssh and the image will be saved."
+		   ssh 127.0.0.1 -i ./data/centos8stream/sshkey   -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT}
+                elif [ "scpto" = "${RUN_TASK}"]; then
+                   echo "Copy files to VM"
+		   scp -i  ${DATA_DIR}/sshkey -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${PUT_FILES} ${USER}@${HOST}:.
+                elif [ "stigit" = "${RUN_TASK}"]; then
+                   echo "Not sure howto run this yet."
+                fi
+		read -p "Press enter to exit and save the image."
+        fi
+fi
+
 echo "--- ssh is working. Put ${RUN_SCRIPT} ${PUT_FILES}."
-scp -i ${DATA_DIR}/sshkey -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} bin/${RUN_SCRIPT} ${USER}@${HOST}:.
+if [ ! "${RUN_CMD}" = "not needed." ]; then
+  scp -i ${DATA_DIR}/sshkey -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} bin/${RUN_SCRIPT} ${USER}@${HOST}:.
+fi
 ssh -i ${DATA_DIR}/sshkey -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST} mkdir -p data && rm -f zerofile
 
 if [ "${SET_TASK}" = "mkiso" ]; then
