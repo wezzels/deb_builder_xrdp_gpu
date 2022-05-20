@@ -27,15 +27,15 @@ done
 
 if [ ! -z "${SHOW_HELP}" ]; then
 	echo "USAGE: ./run_cmd.sh -o <OSTYPE> -t <TASK> -r <RUN_SCRIPT> -p <PUT_FILES or DIRS> -g <GET_FILES or DIRS>"
-	echo "          -o (Alma8,CentOS8,Rocky8,Ubuntu2004,Ubuntu2204)"
-	echo "          -t (image,sshto,scpto,stigit,mkiso,mkisotoimg,process)"
+	echo "          -o (Alma8,CentOS8,Rocky8,Rhel8,Ubuntu2004,Ubuntu2204)"
+	echo "          -t (image,repo,sshto,scpto,stigit,mkrepo,mkiso,mkisotoimg,process)"
         echo "          -r script must be found in bin directory."
 	echo "          -p ex: *.iso Assets/ /tmp/*x11.lock"
 	echo "          -p ex: *.tgz data_dir/ /tmp/*x11.lock"
 fi
 
 IFS="|"
-task_array=("image|sshto|scpto|stigit|mkiso|mkisotoimg|process")
+task_array=("image|repo|sshto|scpto|stigit|mkrepo|mkiso|mkisotoimg|process")
 if [ ! -z "${SET_TASK}" ]; then
         if [[ "${IFS}${task_array[*]}${IFS}" =~ "${IFS}${SET_TASK}${IFS}" ]]; then
                 #./bin/${SET_TASK}Linux.sh
@@ -53,7 +53,7 @@ else
 fi
 
 IFS="|"
-os_array=("Alma8|CentOS8|RedHat8|Rocky8|Ubuntu2004|Ubuntu2204")
+os_array=("Alma8|CentOS8|Rhel8|Rocky8|Ubuntu2004|Ubuntu2204")
 if [ ! -z "${SET_OS}" ]; then
 	if [[ "${IFS}${os_array[*]}${IFS}" =~ "${IFS}${SET_OS}${IFS}" ]]; then
     		. ./cfgs/${SET_OS}Linux.cfg
@@ -129,41 +129,54 @@ echo "hostnane         = ${HOST}"
 echo "image url        = ${IMG_URL}"
 echo "image size       = ${IMG_SIZE}"
 echo "image name       = ${IMG}"
-echo "incr image       = ${INCR_IMG}"
+echo "incr image       = ${IMG_INCR}"
+echo "repo image       = ${IMG_REPO}"
+echo "stig image       = ${IMG_STIG}"
 echo "user-data file   = ${USER_DATA}"
 echo "port for ssh     = ${SSH_PORT}"
 echo "script to run    = ${RUN_SCRIPT}"
 echo "name of sha file = ${FULL_RUN_SHA}"
 echo "vnc port         = ${VNC_PORT}"
 echo "access key       = ${MY_SSH_ACCESS_KEY}"
-#if [ "$SET_FILES" == "yes" ]
+if [ "${SET_TASK}" = "repo" ]; then
+	SAVE_IMG="${IMG_REPO}"
+elif [ "${SET_TASK}" = "stigs" ]; then
+	SAVE_IMG="${IMG_STIG}"
+elif [ "${SET_TASK}" = "image" ]; then
+	SAVE_IMG="${IMG_INCR}"
+else
 
-#fi	
+	exit 1
+fi	
 
 #Make storage area if does not exist.
 mkdir -p $DATA_DIR
 
 #Kill all processes that could cause an issue.  Will need to be narrowed done later. 
-kill $( ps -ef | grep qemu-system-x86_64 | xargs | cut -d" " -f2 )
+kill $( ps -ef | grep qemu-system-x86_64 | grep ${SSH_PORT}| xargs | cut -d" " -f2 )
 
 
 #Cleanup old files if they exist.
-rm -f pid.23* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
+rm -f pid.23* user-data meta-data ${DATA_DIR}/cloud.img "/tmp/${IMG}"
 
 # Get image file from internet if not already downloaded.
 if [ ! -f "${DATA_DIR}/${IMG}" ]; then
-	if [ $IMG_URL = "" ]; then
-		cp files/${IMG} ./${IMG} 
+	if [ $IMG_URL = "<Manual>" ]; then
+		echo "Doing the manual method."
+		cp files/${IMG} ${DATA_DIR}/${IMG} 
 	else
   		wget -O "${DATA_DIR}/${IMG}" "${IMG_URL}"	
 	fi
 fi
 
 #Increase the size of the image.  
-if [ ! -f "${IMG}" ]; then
-  cp ${DATA_DIR}/${IMG} ${IMG}
-  qemu-img resize "${IMG}" +${IMG_SIZE}
+if [ ! -f "/tmp/${IMG}" ]; then
+  cp ${DATA_DIR}/${IMG} /tmp/${IMG}
+  qemu-img resize /tmp/${IMG} +${IMG_SIZE}
+  qemu-img info /tmp/${IMG}
 fi
+echo "disk info."
+
 if [ ! -f "cloud-init/${USER_DATA}" ]; then
 	        rm -f user-data
 		cp "cloud-init/${USER_DATA}" user-data
@@ -204,7 +217,7 @@ fi
 cloud-localds --disk-format qcow2 ${DATA_DIR}/cloud.img user-data 
 qemu-system-x86_64 \
   -cpu host \
-  -drive file="${IMG}",if=virtio \
+  -drive file="/tmp/${IMG}",if=virtio \
   -m 2G \
   -drive file=${DATA_DIR}/cloud.img,if=virtio \
   -enable-kvm \
@@ -259,6 +272,14 @@ fi
 echo "--- ssh is working. Put ${RUN_SCRIPT} ${PUT_FILES}."
 if [ ! "${RUN_CMD}" = "not needed." ]; then
   scp -i ${DATA_DIR}/sshkey -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} bin/${RUN_SCRIPT} ${USER}@${HOST}:.
+  if [ ! "${PUT_FILES}" = " " ]; then
+	  IFS=','
+	  read -a pfiles <<< "${PUT_FILES}"
+	  for t in "${pfiles[@]}"
+	  do
+     		scp -i ${DATA_DIR}/sshkey -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${SSH_PORT} ${t} ${USER}@${HOST}:.
+	  done
+  fi
 fi
 ssh -i ${DATA_DIR}/sshkey -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${SSH_PORT} -o LogLevel=ERROR ${USER}@${HOST} mkdir -p data && rm -f zerofile
 
@@ -311,15 +332,11 @@ echo "--- Finished disk cleanup. Shutting down. "
 kill $( cat pid.${SSH_PORT} )
 sync
 sync
-time qemu-img convert -O qcow2 -p -c ${IMG} ${DATA_DIR}/incr_${IMG}
-#rsync -av ${IMG} ${DATA_DIR}/incr_pre_${IMG}
-
-#sha256sum -b ${DATA_DIR}/incr_${IMG}
-echo "`sha256sum -b ${IMG}`" > ${DATA_DIR}/${FULL_RUN_SHA}
+time qemu-img convert -O qcow2 -p -c /tmp/${IMG} ${DATA_DIR}/${SAVE_IMG}
 
 echo "Wait time was: ${date2}"
 echo "Total Time:  $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)"
-rm -f ${DATA_DIR}/cloud.img meta-data ${IMG} user-data pid.${SSH_PORT}
+rm -f ${DATA_DIR}/cloud.img meta-data /tmp/${IMG} user-data pid.${SSH_PORT}
 
 echo "-----" >> ./run_times.txt
 echo "$0 , ${RUN_SCRIPT}" >> ./run_times.txt

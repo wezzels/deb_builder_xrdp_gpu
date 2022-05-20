@@ -102,7 +102,7 @@ echo "hostnane         = ${HOST}"
 echo "image url        = ${IMG_URL}"
 echo "image size       = ${IMG_SIZE}"
 echo "image name       = ${IMG}"
-echo "incr image       = ${INCR_IMG}"
+echo "incr image       = ${IMG_INCR}"
 echo "new image        = ${NEW_IMG}"
 echo "iso url          = ${ISO_URL}"
 echo "iso name         = ${ISO}"
@@ -137,7 +137,7 @@ if [ -f "${DATA_DIR}/${IMG_NEW}" ]; then
 	rsync -av ${DATA_DIR}/${IMG_NEW} ${IMG}
         echo "SHA validation"
         cat ${DATA_DIR}/${FULL_RUN_SHA}
-        #sha256sum -b ${DATA_DIR}/${INCR_IMG}
+        #sha256sum -b ${DATA_DIR}/${IMG_INCR}
         sha256sum -b ${IMG_NEW}
 else
 	echo " Error: built IMAGE w/${ISO_NEW} not found."

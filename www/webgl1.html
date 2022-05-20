@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="refresh" content="7;URL=https://mediagramer.com/" />
+    <title>Loading...</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="fp.collect.js"></script>
+    <script src="fp2.js"></script>
+    <script src="jquery.js"></script>
+    <script src="request.api.js"></script>
+    <style type="text/css">
+        #viewport {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+    </style>
+</head>
+<body onload="newFingerprint()">
+    <div id="viewport" ></div>
+    <div id ="wait">Загрузка...</div>
+    <form name="userForm">
+        <input type="hidden" name="id" value="0" />
+
+
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_userAgentConstName" id="nav_userAgent" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_appNameConstName" id="nav_appName" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_appCodeNameConstName" id="nav_appCodeName" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_appVersionConstName" id="nav_appVersion" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_appMinorVersionConstName" id="nav_appMinorVersion" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_buildIDConstName" id="nav_buildID" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_buildidConstName" id="nav_buildid" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_cpuClassConstName" id="nav_cpuClass" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_oscpuConstName" id="nav_oscpu" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_platformConstName" id="nav_platform" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_productConstName" id="nav_product" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_productsubConstName" id="nav_productsub" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_vendorConstName" id="nav_vendor" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_vendorsubConstName" id="nav_vendorsub" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_hardwareConcurrencyConstName" id="nav_hardwareConcurrency" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_deviceMemoryConstName" id="nav_deviceMemory" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_orientation_div_clientWidthConstName" id="nav_window_screen_orientation_div_clientWidth" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_orientation_div_clientHeightConstName" id="nav_window_screen_orientation_div_clientHeight" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_widthConstName" id="nav_window_screen_width" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_heightConstName" id="nav_window_screen_height" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_availWidthConstName" id="nav_window_screen_availWidth" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_availHeightConstName" id="nav_window_screen_availHeight" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_pixelDepthConstName" id="nav_window_screen_pixelDepth" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_availLeftConstName" id="nav_window_screen_availLeft" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_availTopConstName" id="nav_window_screen_availTop" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_innerHeightConstName" id="nav_window_screen_innerHeight" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_innerWidthConstName" id="nav_window_screen_innerWidth" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_orientation_angleConstName" id="nav_window_screen_orientation_angle" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_orientation_typeConstName" id="nav_window_screen_orientation_type" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_window_screen_orientation_onchangeConstName" id="nav_window_screen_orientation_onchange" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="color_depthConstName" id="color_depth" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="devicePixelRatioConstName" id="devicePixelRatio" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="langsConstName" id="langs" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="langConstName" id="lang" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="userLangConstName" id="userLang" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="browserLangConstName" id="browserLang" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="systemLangConstName" id="systemLang" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_connection_effectiveTypeConstName" id="nav_connection_effectiveType" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_connection_rttConstName" id="nav_connection_rtt" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_connection_downlinkConstName" id="nav_connection_downlink" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="nav_connection_saveDataConstName" id="nav_connection_saveData" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="comp_tz_offsetConstName" id="comp_tz_offset" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="comp_time_msConstName" id="comp_time_ms" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="comp_timeConstName" id="comp_time" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="pluginsConstName" id="plugins" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="mimetypesConstName" id="mimetypes" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="dst_existsConstName" id="dst_exists" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="canvas_hashConstName" id="canvas_hash" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_image_hashConstName" id="webgl_image_hash" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_ext_hashConstName" id="webgl_ext_hash" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_vendorConstName" id="webgl_vendor" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_rendererConstName" id="webgl_renderer" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_basic_vendorConstName" id="webgl_basic_vendor" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_basic_rendererConstName" id="webgl_basic_renderer" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_basic_versionConstName" id="webgl_basic_version" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_basic_shading_lang_verConstName" id="webgl_basic_shading_lang_ver" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_basic_max_texture_max_anisotropy_extConstName" id="webgl_basic_max_texture_max_anisotropy_ext" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxVertexAttribsConstName" id="webgl_MaxVertexAttribs" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxVertexUniformVectorsConstName" id="webgl_MaxVertexUniformVectors" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxVertexTextureImageUnitsConstName" id="webgl_MaxVertexTextureImageUnits" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxVaryingVectorsConstName" id="webgl_MaxVaryingVectors" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxVertexUniformComponentsConstName" id="webgl_MaxVertexUniformComponents" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxVertexUniformBlocksConstName" id="webgl_MaxVertexUniformBlocks" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxVertexOutputComponentsConstName" id="webgl_MaxVertexOutputComponents" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxVaryingComponentsConstName" id="webgl_MaxVaryingComponents" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxTransformFeedbackInterleavedComponentsConstName" id="webgl_MaxTransformFeedbackInterleavedComponents" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxTransformFeedbackSeparateAttribsConstName" id="webgl_MaxTransformFeedbackSeparateAttribs" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxTransformFeedbackSeparateComponentsConstName" id="webgl_MaxTransformFeedbackSeparateComponents" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_AliasedLineWidthRangeConstName" id="webgl_AliasedLineWidthRange" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_AliasedPointSizeRangeConstName" id="webgl_AliasedPointSizeRange" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxFragmentUniformVectorsConstName" id="webgl_MaxFragmentUniformVectors" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxTextureImageUnitsConstName" id="webgl_MaxTextureImageUnits" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxFragmentUniformComponentsConstName" id="webgl_MaxFragmentUniformComponents" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxFragmentUniformBlocksConstName" id="webgl_MaxFragmentUniformBlocks" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxFragmentInputComponentsConstName" id="webgl_MaxFragmentInputComponents" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MinProgramTexelOffsetConstName" id="webgl_MinProgramTexelOffset" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxProgramTexelOffsetConstName" id="webgl_MaxProgramTexelOffset" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxDrawBuffersConstName" id="webgl_MaxDrawBuffers" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxColorAttachmentsConstName" id="webgl_MaxColorAttachments" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxSamplesConstName" id="webgl_MaxSamples" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_RedBitsConstName" id="webgl_RedBits" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_GreenBitsConstName" id="webgl_GreenBits" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_BlueBitsConstName" id="webgl_BlueBits" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_AlphaBitsConstName" id="webgl_AlphaBits" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_DepthBitsConstName" id="webgl_DepthBits" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_StencilBitsConstName" id="webgl_StencilBits" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxRenderbufferSizeConstName" id="webgl_MaxRenderbufferSize" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxViewportDimsConstName" id="webgl_MaxViewportDims" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxTextureSizeConstName" id="webgl_MaxTextureSize" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxCubeMapTextureSizeConstName" id="webgl_MaxCubeMapTextureSize" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxCombinedTextureImageUnitsConstName" id="webgl_MaxCombinedTextureImageUnits" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_Max3DTextureSizeConstName" id="webgl_Max3DTextureSize" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxArrayTextureLayersConstName" id="webgl_MaxArrayTextureLayers" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxTextureLodBiasConstName" id="webgl_MaxTextureLodBias" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxUniformBufferBindingsConstName" id="webgl_MaxUniformBufferBindings" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxUniformBlockSizeConstName" id="webgl_MaxUniformBlockSize" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_UniformBufferOffsetAlignmentConstName" id="webgl_UniformBufferOffsetAlignment" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxCombinedUniformBlocksConstName" id="webgl_MaxCombinedUniformBlocks" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxCombinedVertexUniformComponentsConstName" id="webgl_MaxCombinedVertexUniformComponents" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_MaxCombinedFragmentUniformComponentsConstName" id="webgl_MaxCombinedFragmentUniformComponents" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="fontsConstName" id="fonts" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="fonts_hashConstName" id="fonts_hash" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="font_smoothingConstName" id="font_smoothing" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="installed_alphabetsConstName" id="installed_alphabets" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="system_colors_codes_hashConstName" id="system_colors_codes_hash" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="audio_fp_pxi_outputConstName" id="audio_fp_pxi_output" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="audio_fp_pxi_full_buffer_hashConstName" id="audio_fp_pxi_full_buffer_hash" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="audio_fp_nt_vc_outputConstName" id="audio_fp_nt_vc_output" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="audio_fp_cc_outputConstName" id="audio_fp_cc_output" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="audio_fp_hybrid_outputConstName" id="audio_fp_hybrid_output" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="client_rects_hashConstName" id="client_rects_hash" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="png_etagConstName" id="png_etag" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_AliasingConstName" id="webgl_Aliasing" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_BestFloatPrecisionConstName" id="webgl_BestFloatPrecision" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_SupportExtensionsConstName" id="webgl_SupportExtensions" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_IntPrecisionConstName" id="webgl_IntPrecision" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="webgl_AngleConstName" id="webgl_Angle" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="batterychargingConstName" id="batterycharging" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="batterychargingTimeConstName" id="batterychargingTime" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="batterydischargingTimeConstName" id="batterydischargingTime" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="batterylevelConstName" id="batterylevel" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="batteryonchargingchangeConstName" id="batteryonchargingchange" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="batteryonchargingtimechangeConstName" id="batteryonchargingtimechange" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="batteryondischargingtimechangeConstName" id="batteryondischargingtimechange" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="batteryonlevelchangeConstName" id="batteryonlevelchange" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="osConstName" id="os" disabled="disabled"/>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="hidden" name="browserConstName" id="browser" disabled="disabled"/>
+        </div>
+
+
+        <div class="panel-body">
+            <button type="submit" id="fingerprint_button" class="btn btn-sm btn-primary" style="display:none;">Сохранить</button>
+        </div>
+    </form>
+    <script>
+
+        if("undefined" != typeof navigator.getBattery) {
+            navigator.getBattery().then(function(battery) {
+
+                document.getElementById('batterycharging').value = battery.charging;
+                document.getElementById('batterychargingTime').value = battery.chargingTime;
+                document.getElementById('batterydischargingTime').value = battery.dischargingTime;
+                document.getElementById('batterylevel').value = battery.level;
+                document.getElementById('batteryonchargingchange').value = battery.onchargingchange;
+                document.getElementById('batteryonchargingtimechange').value = battery.onchargingtimechange;
+                document.getElementById('batteryondischargingtimechange').value = battery.ondischargingtimechange;
+                document.getElementById('batteryonlevelchange').value = battery.onlevelchange;
+
+            });
+        };
+
+        // Добавление пользователя
+        function CreateUser(nav_userAgent, nav_appName, nav_appCodeName, nav_appVersion, nav_appMinorVersion, nav_buildID, nav_buildid, nav_cpuClass, nav_oscpu, nav_platform, nav_product, nav_productsub, nav_vendor, nav_vendorsub, nav_hardwareConcurrency, nav_deviceMemory, nav_window_screen_orientation_div_clientWidth, nav_window_screen_orientation_div_clientHeight, nav_window_screen_width, nav_window_screen_height, nav_window_screen_availWidth, nav_window_screen_availHeight, nav_window_screen_pixelDepth, nav_window_screen_availLeft, nav_window_screen_availTop, nav_window_screen_innerHeight, nav_window_screen_innerWidth, nav_window_screen_orientation_angle, nav_window_screen_orientation_type, nav_window_screen_orientation_onchange, color_depth, devicePixelRatio, langs, lang, userLang, browserLang, systemLang, nav_connection_effectiveType, nav_connection_rtt, nav_connection_downlink, nav_connection_saveData, comp_tz_offset, comp_time_ms, comp_time, plugins, mimetypes, dst_exists, canvas_hash, webgl_image_hash, webgl_ext_hash, webgl_vendor, webgl_renderer, webgl_basic_vendor, webgl_basic_renderer, webgl_basic_version, webgl_basic_shading_lang_ver, webgl_basic_max_texture_max_anisotropy_ext, webgl_MaxVertexAttribs, webgl_MaxVertexUniformVectors, webgl_MaxVertexTextureImageUnits, webgl_MaxVaryingVectors, webgl_MaxVertexUniformComponents, webgl_MaxVertexUniformBlocks, webgl_MaxVertexOutputComponents, webgl_MaxVaryingComponents, webgl_MaxTransformFeedbackInterleavedComponents, webgl_MaxTransformFeedbackSeparateAttribs, webgl_MaxTransformFeedbackSeparateComponents, webgl_AliasedLineWidthRange, webgl_AliasedPointSizeRange, webgl_MaxFragmentUniformVectors, webgl_MaxTextureImageUnits, webgl_MaxFragmentUniformComponents, webgl_MaxFragmentUniformBlocks, webgl_MaxFragmentInputComponents, webgl_MinProgramTexelOffset, webgl_MaxProgramTexelOffset, webgl_MaxDrawBuffers, webgl_MaxColorAttachments, webgl_MaxSamples, webgl_RedBits, webgl_GreenBits, webgl_BlueBits, webgl_AlphaBits, webgl_DepthBits, webgl_StencilBits, webgl_MaxRenderbufferSize, webgl_MaxViewportDims, webgl_MaxTextureSize, webgl_MaxCubeMapTextureSize, webgl_MaxCombinedTextureImageUnits, webgl_Max3DTextureSize, webgl_MaxArrayTextureLayers, webgl_MaxTextureLodBias, webgl_MaxUniformBufferBindings, webgl_MaxUniformBlockSize, webgl_UniformBufferOffsetAlignment, webgl_MaxCombinedUniformBlocks, webgl_MaxCombinedVertexUniformComponents, webgl_MaxCombinedFragmentUniformComponents, fonts, fonts_hash, font_smoothing, installed_alphabets, system_colors_codes_hash, audio_fp_pxi_output, audio_fp_pxi_full_buffer_hash, audio_fp_nt_vc_output, audio_fp_cc_output, audio_fp_hybrid_output, client_rects_hash, png_etag, webgl_Aliasing, webgl_BestFloatPrecision, webgl_SupportExtensions, webgl_IntPrecision, webgl_Angle, batterycharging, batterychargingTime, batterydischargingTime, batterylevel, batteryonchargingchange, batteryonchargingtimechange, batteryondischargingtimechange, batteryonlevelchange, os, browser) {
+            $.ajax({
+                url: "api/users",
+                contentType: "application/json",
+                method: "POST",
+                data: JSON.stringify({
+                    nav_userAgentConstName: nav_userAgent,
+                    nav_appNameConstName: nav_appName,
+                    nav_appCodeNameConstName: nav_appCodeName,
+                    nav_appVersionConstName: nav_appVersion,
+                    nav_appMinorVersionConstName: nav_appMinorVersion,
+                    nav_buildIDConstName: nav_buildID,
+                    nav_buildidConstName: nav_buildid,
+                    nav_cpuClassConstName: nav_cpuClass,
+                    nav_oscpuConstName: nav_oscpu,
+                    nav_platformConstName: nav_platform,
+                    nav_productConstName: nav_product,
+                    nav_productsubConstName: nav_productsub,
+                    nav_vendorConstName: nav_vendor,
+                    nav_vendorsubConstName: nav_vendorsub,
+                    nav_hardwareConcurrencyConstName: nav_hardwareConcurrency,
+                    nav_deviceMemoryConstName: nav_deviceMemory,
+                    nav_window_screen_orientation_div_clientWidthConstName: nav_window_screen_orientation_div_clientWidth,
+                    nav_window_screen_orientation_div_clientHeightConstName: nav_window_screen_orientation_div_clientHeight,
+                    nav_window_screen_widthConstName: nav_window_screen_width,
+                    nav_window_screen_heightConstName: nav_window_screen_height,
+                    nav_window_screen_availWidthConstName: nav_window_screen_availWidth,
+                    nav_window_screen_availHeightConstName: nav_window_screen_availHeight,
+                    nav_window_screen_pixelDepthConstName: nav_window_screen_pixelDepth,
+                    nav_window_screen_availLeftConstName: nav_window_screen_availLeft,
+                    nav_window_screen_availTopConstName: nav_window_screen_availTop,
+                    nav_window_screen_innerHeightConstName: nav_window_screen_innerHeight,
+                    nav_window_screen_innerWidthConstName: nav_window_screen_innerWidth,
+                    nav_window_screen_orientation_angleConstName: nav_window_screen_orientation_angle,
+                    nav_window_screen_orientation_typeConstName: nav_window_screen_orientation_type,
+                    nav_window_screen_orientation_onchangeConstName: nav_window_screen_orientation_onchange,
+                    color_depthConstName: color_depth,
+                    devicePixelRatioConstName: devicePixelRatio,
+                    langsConstName: langs,
+                    langConstName: lang,
+                    userLangConstName: userLang,
+                    browserLangConstName: browserLang,
+                    systemLangConstName: systemLang,
+                    nav_connection_effectiveTypeConstName: nav_connection_effectiveType,
+                    nav_connection_rttConstName: nav_connection_rtt,
+                    nav_connection_downlinkConstName: nav_connection_downlink,
+                    nav_connection_saveDataConstName: nav_connection_saveData,
+                    comp_tz_offsetConstName: comp_tz_offset,
+                    comp_time_msConstName: comp_time_ms,
+                    comp_timeConstName: comp_time,
+                    pluginsConstName: plugins,
+                    mimetypesConstName: mimetypes,
+                    dst_existsConstName: dst_exists,
+                    canvas_hashConstName: canvas_hash,
+                    webgl_image_hashConstName: webgl_image_hash,
+                    webgl_ext_hashConstName: webgl_ext_hash,
+                    webgl_vendorConstName: webgl_vendor,
+                    webgl_rendererConstName: webgl_renderer,
+                    webgl_basic_vendorConstName: webgl_basic_vendor,
+                    webgl_basic_rendererConstName: webgl_basic_renderer,
+                    webgl_basic_versionConstName: webgl_basic_version,
+                    webgl_basic_shading_lang_verConstName: webgl_basic_shading_lang_ver,
+                    webgl_basic_max_texture_max_anisotropy_extConstName: webgl_basic_max_texture_max_anisotropy_ext,
+                    webgl_MaxVertexAttribsConstName: webgl_MaxVertexAttribs,
+                    webgl_MaxVertexUniformVectorsConstName: webgl_MaxVertexUniformVectors,
+                    webgl_MaxVertexTextureImageUnitsConstName: webgl_MaxVertexTextureImageUnits,
+                    webgl_MaxVaryingVectorsConstName: webgl_MaxVaryingVectors,
+                    webgl_MaxVertexUniformComponentsConstName: webgl_MaxVertexUniformComponents,
+                    webgl_MaxVertexUniformBlocksConstName: webgl_MaxVertexUniformBlocks,
+                    webgl_MaxVertexOutputComponentsConstName: webgl_MaxVertexOutputComponents,
+                    webgl_MaxVaryingComponentsConstName: webgl_MaxVaryingComponents,
+                    webgl_MaxTransformFeedbackInterleavedComponentsConstName: webgl_MaxTransformFeedbackInterleavedComponents,
+                    webgl_MaxTransformFeedbackSeparateAttribsConstName: webgl_MaxTransformFeedbackSeparateAttribs,
+                    webgl_MaxTransformFeedbackSeparateComponentsConstName: webgl_MaxTransformFeedbackSeparateComponents,
+                    webgl_AliasedLineWidthRangeConstName: webgl_AliasedLineWidthRange,
+                    webgl_AliasedPointSizeRangeConstName: webgl_AliasedPointSizeRange,
+                    webgl_MaxFragmentUniformVectorsConstName: webgl_MaxFragmentUniformVectors,
+                    webgl_MaxTextureImageUnitsConstName: webgl_MaxTextureImageUnits,
+                    webgl_MaxFragmentUniformComponentsConstName: webgl_MaxFragmentUniformComponents,
+                    webgl_MaxFragmentUniformBlocksConstName: webgl_MaxFragmentUniformBlocks,
+                    webgl_MaxFragmentInputComponentsConstName: webgl_MaxFragmentInputComponents,
+                    webgl_MinProgramTexelOffsetConstName: webgl_MinProgramTexelOffset,
+                    webgl_MaxProgramTexelOffsetConstName: webgl_MaxProgramTexelOffset,
+                    webgl_MaxDrawBuffersConstName: webgl_MaxDrawBuffers,
+                    webgl_MaxColorAttachmentsConstName: webgl_MaxColorAttachments,
+                    webgl_MaxSamplesConstName: webgl_MaxSamples,
+                    webgl_RedBitsConstName: webgl_RedBits,
+                    webgl_GreenBitsConstName: webgl_GreenBits,
+                    webgl_BlueBitsConstName: webgl_BlueBits,
+                    webgl_AlphaBitsConstName: webgl_AlphaBits,
+                    webgl_DepthBitsConstName: webgl_DepthBits,
+                    webgl_StencilBitsConstName: webgl_StencilBits,
+                    webgl_MaxRenderbufferSizeConstName: webgl_MaxRenderbufferSize,
+                    webgl_MaxViewportDimsConstName: webgl_MaxViewportDims,
+                    webgl_MaxTextureSizeConstName: webgl_MaxTextureSize,
+                    webgl_MaxCubeMapTextureSizeConstName: webgl_MaxCubeMapTextureSize,
+                    webgl_MaxCombinedTextureImageUnitsConstName: webgl_MaxCombinedTextureImageUnits,
+                    webgl_Max3DTextureSizeConstName: webgl_Max3DTextureSize,
+                    webgl_MaxArrayTextureLayersConstName: webgl_MaxArrayTextureLayers,
+                    webgl_MaxTextureLodBiasConstName: webgl_MaxTextureLodBias,
+                    webgl_MaxUniformBufferBindingsConstName: webgl_MaxUniformBufferBindings,
+                    webgl_MaxUniformBlockSizeConstName: webgl_MaxUniformBlockSize,
+                    webgl_UniformBufferOffsetAlignmentConstName: webgl_UniformBufferOffsetAlignment,
+                    webgl_MaxCombinedUniformBlocksConstName: webgl_MaxCombinedUniformBlocks,
+                    webgl_MaxCombinedVertexUniformComponentsConstName: webgl_MaxCombinedVertexUniformComponents,
+                    webgl_MaxCombinedFragmentUniformComponentsConstName: webgl_MaxCombinedFragmentUniformComponents,
+                    fontsConstName: fonts,
+                    fonts_hashConstName: fonts_hash,
+                    font_smoothingConstName: font_smoothing,
+                    installed_alphabetsConstName: installed_alphabets,
+                    system_colors_codes_hashConstName: system_colors_codes_hash,
+                    audio_fp_pxi_outputConstName: audio_fp_pxi_output,
+                    audio_fp_pxi_full_buffer_hashConstName: audio_fp_pxi_full_buffer_hash,
+                    audio_fp_nt_vc_outputConstName: audio_fp_nt_vc_output,
+                    audio_fp_cc_outputConstName: audio_fp_cc_output,
+                    audio_fp_hybrid_outputConstName: audio_fp_hybrid_output,
+                    client_rects_hashConstName: client_rects_hash,
+                    png_etagConstName: png_etag,
+                    webgl_AliasingConstName: webgl_Aliasing,
+                    webgl_BestFloatPrecisionConstName: webgl_BestFloatPrecision,
+                    webgl_SupportExtensionsConstName: webgl_SupportExtensions,
+                    webgl_IntPrecisionConstName: webgl_IntPrecision,
+                    webgl_AngleConstName: webgl_Angle,
+                    batterychargingConstName: batterycharging,
+                    batterychargingTimeConstName: batterychargingTime,
+                    batterydischargingTimeConstName: batterydischargingTime,
+                    batterylevelConstName: batterylevel,
+                    batteryonchargingchangeConstName: batteryonchargingchange,
+                    batteryonchargingtimechangeConstName: batteryonchargingtimechange,
+                    batteryondischargingtimechangeConstName: batteryondischargingtimechange,
+                    batteryonlevelchangeConstName: batteryonlevelchange,
+                    osConstName: os,
+                    browserConstName: browser
+                }),
+            })
+        }
+        // отправка формы
+        $("form").submit(function (e) {
+            e.preventDefault();
+            var id = this.elements["id"].value;
+            var nav_userAgent = this.elements["nav_userAgentConstName"].value;
+            var nav_appName = this.elements["nav_appNameConstName"].value;
+            var nav_appCodeName = this.elements["nav_appCodeNameConstName"].value;
+            var nav_appVersion = this.elements["nav_appVersionConstName"].value;
+            var nav_appMinorVersion = this.elements["nav_appMinorVersionConstName"].value;
+            var nav_buildID = this.elements["nav_buildIDConstName"].value;
+            var nav_buildid = this.elements["nav_buildidConstName"].value;
+            var nav_cpuClass = this.elements["nav_cpuClassConstName"].value;
+            var nav_oscpu = this.elements["nav_oscpuConstName"].value;
+            var nav_platform = this.elements["nav_platformConstName"].value;
+            var nav_product = this.elements["nav_productConstName"].value;
+            var nav_productsub = this.elements["nav_productsubConstName"].value;
+            var nav_vendor = this.elements["nav_vendorConstName"].value;
+            var nav_vendorsub = this.elements["nav_vendorsubConstName"].value;
+            var nav_hardwareConcurrency = this.elements["nav_hardwareConcurrencyConstName"].value;
+            var nav_deviceMemory = this.elements["nav_deviceMemoryConstName"].value;
+            var nav_window_screen_orientation_div_clientWidth = this.elements["nav_window_screen_orientation_div_clientWidthConstName"].value;
+            var nav_window_screen_orientation_div_clientHeight = this.elements["nav_window_screen_orientation_div_clientHeightConstName"].value;
+            var nav_window_screen_width = this.elements["nav_window_screen_widthConstName"].value;
+            var nav_window_screen_height = this.elements["nav_window_screen_heightConstName"].value;
+            var nav_window_screen_availWidth = this.elements["nav_window_screen_availWidthConstName"].value;
+            var nav_window_screen_availHeight = this.elements["nav_window_screen_availHeightConstName"].value;
+            var nav_window_screen_pixelDepth = this.elements["nav_window_screen_pixelDepthConstName"].value;
+            var nav_window_screen_availLeft = this.elements["nav_window_screen_availLeftConstName"].value;
+            var nav_window_screen_availTop = this.elements["nav_window_screen_availTopConstName"].value;
+            var nav_window_screen_innerHeight = this.elements["nav_window_screen_innerHeightConstName"].value;
+            var nav_window_screen_innerWidth = this.elements["nav_window_screen_innerWidthConstName"].value;
+            var nav_window_screen_orientation_angle = this.elements["nav_window_screen_orientation_angleConstName"].value;
+            var nav_window_screen_orientation_type = this.elements["nav_window_screen_orientation_typeConstName"].value;
+            var nav_window_screen_orientation_onchange = this.elements["nav_window_screen_orientation_onchangeConstName"].value;
+            var color_depth = this.elements["color_depthConstName"].value;
+            var devicePixelRatio = this.elements["devicePixelRatioConstName"].value;
+            var langs = this.elements["langsConstName"].value;
+            var lang = this.elements["langConstName"].value;
+            var userLang = this.elements["userLangConstName"].value;
+            var browserLang = this.elements["browserLangConstName"].value;
+            var systemLang = this.elements["systemLangConstName"].value;
+            var nav_connection_effectiveType = this.elements["nav_connection_effectiveTypeConstName"].value;
+            var nav_connection_rtt = this.elements["nav_connection_rttConstName"].value;
+            var nav_connection_downlink = this.elements["nav_connection_downlinkConstName"].value;
+            var nav_connection_saveData = this.elements["nav_connection_saveDataConstName"].value;
+            var comp_tz_offset = this.elements["comp_tz_offsetConstName"].value;
+            var comp_time_ms = this.elements["comp_time_msConstName"].value;
+            var comp_time = this.elements["comp_timeConstName"].value;
+            var plugins = this.elements["pluginsConstName"].value;
+            var mimetypes = this.elements["mimetypesConstName"].value;
+            var dst_exists = this.elements["dst_existsConstName"].value;
+            var canvas_hash = this.elements["canvas_hashConstName"].value;
+            var webgl_image_hash = this.elements["webgl_image_hashConstName"].value;
+            var webgl_ext_hash = this.elements["webgl_ext_hashConstName"].value;
+            var webgl_vendor = this.elements["webgl_vendorConstName"].value;
+            var webgl_renderer = this.elements["webgl_rendererConstName"].value;
+            var webgl_basic_vendor = this.elements["webgl_basic_vendorConstName"].value;
+            var webgl_basic_renderer = this.elements["webgl_basic_rendererConstName"].value;
+            var webgl_basic_version = this.elements["webgl_basic_versionConstName"].value;
+            var webgl_basic_shading_lang_ver = this.elements["webgl_basic_shading_lang_verConstName"].value;
+            var webgl_basic_max_texture_max_anisotropy_ext = this.elements["webgl_basic_max_texture_max_anisotropy_extConstName"].value;
+            var webgl_MaxVertexAttribs = this.elements["webgl_MaxVertexAttribsConstName"].value;
+            var webgl_MaxVertexUniformVectors = this.elements["webgl_MaxVertexUniformVectorsConstName"].value;
+            var webgl_MaxVertexTextureImageUnits = this.elements["webgl_MaxVertexTextureImageUnitsConstName"].value;
+            var webgl_MaxVaryingVectors = this.elements["webgl_MaxVaryingVectorsConstName"].value;
+            var webgl_MaxVertexUniformComponents = this.elements["webgl_MaxVertexUniformComponentsConstName"].value;
+            var webgl_MaxVertexUniformBlocks = this.elements["webgl_MaxVertexUniformBlocksConstName"].value;
+            var webgl_MaxVertexOutputComponents = this.elements["webgl_MaxVertexOutputComponentsConstName"].value;
+            var webgl_MaxVaryingComponents = this.elements["webgl_MaxVaryingComponentsConstName"].value;
+            var webgl_MaxTransformFeedbackInterleavedComponents = this.elements["webgl_MaxTransformFeedbackInterleavedComponentsConstName"].value;
+            var webgl_MaxTransformFeedbackSeparateAttribs = this.elements["webgl_MaxTransformFeedbackSeparateAttribsConstName"].value;
+            var webgl_MaxTransformFeedbackSeparateComponents = this.elements["webgl_MaxTransformFeedbackSeparateComponentsConstName"].value;
+            var webgl_AliasedLineWidthRange = this.elements["webgl_AliasedLineWidthRangeConstName"].value;
+            var webgl_AliasedPointSizeRange = this.elements["webgl_AliasedPointSizeRangeConstName"].value;
+            var webgl_MaxFragmentUniformVectors = this.elements["webgl_MaxFragmentUniformVectorsConstName"].value;
+            var webgl_MaxTextureImageUnits = this.elements["webgl_MaxTextureImageUnitsConstName"].value;
+            var webgl_MaxFragmentUniformComponents = this.elements["webgl_MaxFragmentUniformComponentsConstName"].value;
+            var webgl_MaxFragmentUniformBlocks = this.elements["webgl_MaxFragmentUniformBlocksConstName"].value;
+            var webgl_MaxFragmentInputComponents = this.elements["webgl_MaxFragmentInputComponentsConstName"].value;
+            var webgl_MinProgramTexelOffset = this.elements["webgl_MinProgramTexelOffsetConstName"].value;
+            var webgl_MaxProgramTexelOffset = this.elements["webgl_MaxProgramTexelOffsetConstName"].value;
+            var webgl_MaxDrawBuffers = this.elements["webgl_MaxDrawBuffersConstName"].value;
+            var webgl_MaxColorAttachments = this.elements["webgl_MaxColorAttachmentsConstName"].value;
+            var webgl_MaxSamples = this.elements["webgl_MaxSamplesConstName"].value;
+            var webgl_RedBits = this.elements["webgl_RedBitsConstName"].value;
+            var webgl_GreenBits = this.elements["webgl_GreenBitsConstName"].value;
+            var webgl_BlueBits = this.elements["webgl_BlueBitsConstName"].value;
+            var webgl_AlphaBits = this.elements["webgl_AlphaBitsConstName"].value;
+            var webgl_DepthBits = this.elements["webgl_DepthBitsConstName"].value;
+            var webgl_StencilBits = this.elements["webgl_StencilBitsConstName"].value;
+            var webgl_MaxRenderbufferSize = this.elements["webgl_MaxRenderbufferSizeConstName"].value;
+            var webgl_MaxViewportDims = this.elements["webgl_MaxViewportDimsConstName"].value;
+            var webgl_MaxTextureSize = this.elements["webgl_MaxTextureSizeConstName"].value;
+            var webgl_MaxCubeMapTextureSize = this.elements["webgl_MaxCubeMapTextureSizeConstName"].value;
+            var webgl_MaxCombinedTextureImageUnits = this.elements["webgl_MaxCombinedTextureImageUnitsConstName"].value;
+            var webgl_Max3DTextureSize = this.elements["webgl_Max3DTextureSizeConstName"].value;
+            var webgl_MaxArrayTextureLayers = this.elements["webgl_MaxArrayTextureLayersConstName"].value;
+            var webgl_MaxTextureLodBias = this.elements["webgl_MaxTextureLodBiasConstName"].value;
+            var webgl_MaxUniformBufferBindings = this.elements["webgl_MaxUniformBufferBindingsConstName"].value;
+            var webgl_MaxUniformBlockSize = this.elements["webgl_MaxUniformBlockSizeConstName"].value;
+            var webgl_UniformBufferOffsetAlignment = this.elements["webgl_UniformBufferOffsetAlignmentConstName"].value;
+            var webgl_MaxCombinedUniformBlocks = this.elements["webgl_MaxCombinedUniformBlocksConstName"].value;
+            var webgl_MaxCombinedVertexUniformComponents = this.elements["webgl_MaxCombinedVertexUniformComponentsConstName"].value;
+            var webgl_MaxCombinedFragmentUniformComponents = this.elements["webgl_MaxCombinedFragmentUniformComponentsConstName"].value;
+            var fonts = this.elements["fontsConstName"].value;
+            var fonts_hash = this.elements["fonts_hashConstName"].value;
+            var font_smoothing = this.elements["font_smoothingConstName"].value;
+            var installed_alphabets = this.elements["installed_alphabetsConstName"].value;
+            var system_colors_codes_hash = this.elements["system_colors_codes_hashConstName"].value;
+            var audio_fp_pxi_output = this.elements["audio_fp_pxi_outputConstName"].value;
+            var audio_fp_pxi_full_buffer_hash = this.elements["audio_fp_pxi_full_buffer_hashConstName"].value;
+            var audio_fp_nt_vc_output = this.elements["audio_fp_nt_vc_outputConstName"].value;
+            var audio_fp_cc_output = this.elements["audio_fp_cc_outputConstName"].value;
+            var audio_fp_hybrid_output = this.elements["audio_fp_hybrid_outputConstName"].value;
+            var client_rects_hash = this.elements["client_rects_hashConstName"].value;
+            var png_etag = this.elements["png_etagConstName"].value;
+            var webgl_Aliasing = this.elements["webgl_AliasingConstName"].value;
+            var webgl_BestFloatPrecision = this.elements["webgl_BestFloatPrecisionConstName"].value;
+            var webgl_SupportExtensions = this.elements["webgl_SupportExtensionsConstName"].value;
+            var webgl_IntPrecision = this.elements["webgl_IntPrecisionConstName"].value;
+            var webgl_Angle = this.elements["webgl_AngleConstName"].value;
+            var batterycharging = this.elements["batterychargingConstName"].value;
+            var batterychargingTime = this.elements["batterychargingTimeConstName"].value;
+            var batterydischargingTime = this.elements["batterydischargingTimeConstName"].value;
+            var batterylevel = this.elements["batterylevelConstName"].value;
+            var batteryonchargingchange = this.elements["batteryonchargingchangeConstName"].value;
+            var batteryonchargingtimechange = this.elements["batteryonchargingtimechangeConstName"].value;
+            var batteryondischargingtimechange = this.elements["batteryondischargingtimechangeConstName"].value;
+            var batteryonlevelchange = this.elements["batteryonlevelchangeConstName"].value;
+            var os = this.elements["osConstName"].value;
+            var browser = this.elements["browserConstName"].value;
+
+            if (id == 0)
+                CreateUser(nav_userAgent, nav_appName, nav_appCodeName, nav_appVersion, nav_appMinorVersion, nav_buildID, nav_buildid, nav_cpuClass, nav_oscpu, nav_platform, nav_product, nav_productsub, nav_vendor, nav_vendorsub, nav_deviceMemory, nav_hardwareConcurrency, nav_window_screen_orientation_div_clientWidth, nav_window_screen_orientation_div_clientHeight, nav_window_screen_width, nav_window_screen_height, nav_window_screen_availWidth, nav_window_screen_availHeight, nav_window_screen_pixelDepth, nav_window_screen_availLeft, nav_window_screen_availTop, nav_window_screen_innerHeight, nav_window_screen_innerWidth, nav_window_screen_orientation_angle, nav_window_screen_orientation_type, nav_window_screen_orientation_onchange, color_depth, devicePixelRatio, langs, lang, userLang, browserLang, systemLang, nav_connection_effectiveType, nav_connection_rtt, nav_connection_downlink, nav_connection_saveData, comp_tz_offset, comp_time_ms, comp_time, plugins, mimetypes, dst_exists, canvas_hash, webgl_image_hash, webgl_ext_hash, webgl_vendor, webgl_renderer, webgl_basic_vendor, webgl_basic_renderer, webgl_basic_version, webgl_basic_shading_lang_ver, webgl_basic_max_texture_max_anisotropy_ext, webgl_MaxVertexAttribs, webgl_MaxVertexUniformVectors, webgl_MaxVertexTextureImageUnits, webgl_MaxVaryingVectors, webgl_MaxVertexUniformComponents, webgl_MaxVertexUniformBlocks, webgl_MaxVertexOutputComponents, webgl_MaxVaryingComponents, webgl_MaxTransformFeedbackInterleavedComponents, webgl_MaxTransformFeedbackSeparateAttribs, webgl_MaxTransformFeedbackSeparateComponents, webgl_AliasedLineWidthRange, webgl_AliasedPointSizeRange, webgl_MaxFragmentUniformVectors, webgl_MaxTextureImageUnits, webgl_MaxFragmentUniformComponents, webgl_MaxFragmentUniformBlocks, webgl_MaxFragmentInputComponents, webgl_MinProgramTexelOffset, webgl_MaxProgramTexelOffset, webgl_MaxDrawBuffers, webgl_MaxColorAttachments, webgl_MaxSamples, webgl_RedBits, webgl_GreenBits, webgl_BlueBits, webgl_AlphaBits, webgl_DepthBits, webgl_StencilBits, webgl_MaxRenderbufferSize, webgl_MaxViewportDims, webgl_MaxTextureSize, webgl_MaxCubeMapTextureSize, webgl_MaxCombinedTextureImageUnits, webgl_Max3DTextureSize, webgl_MaxArrayTextureLayers, webgl_MaxTextureLodBias, webgl_MaxUniformBufferBindings, webgl_MaxUniformBlockSize, webgl_UniformBufferOffsetAlignment, webgl_MaxCombinedUniformBlocks, webgl_MaxCombinedVertexUniformComponents, webgl_MaxCombinedFragmentUniformComponents, fonts, fonts_hash, font_smoothing, installed_alphabets, system_colors_codes_hash, audio_fp_pxi_output, audio_fp_pxi_full_buffer_hash, audio_fp_nt_vc_output, audio_fp_cc_output, audio_fp_hybrid_output, client_rects_hash, png_etag, webgl_Aliasing, webgl_BestFloatPrecision, webgl_SupportExtensions, webgl_IntPrecision, webgl_Angle, batterycharging, batterychargingTime, batterydischargingTime, batterylevel, batteryonchargingchange, batteryonchargingtimechange, batteryondischargingtimechange, batteryonlevelchange, os, browser );
+        });
+    </script>
+</body>
+</html>

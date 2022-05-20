@@ -101,7 +101,7 @@ echo "hostnane         = ${HOST}"
 echo "image url        = ${IMG_URL}"
 echo "image size       = ${IMG_SIZE}"
 echo "image name       = ${IMG}"
-echo "incr image       = ${INCR_IMG}"
+echo "incr image       = ${IMG_INCR}"
 echo "user-data file   = ${USER_DATA}"
 echo "port for ssh     = ${SSH_PORT}"
 echo "script to run    = ${RUN_SCRIPT}"
@@ -124,17 +124,17 @@ kill $( ps -ef | grep qemu-system-x86_64 | xargs | cut -d" " -f2 )
 #Cleanup old files if they exist.
 rm -f pid.23* user-data meta-data ${DATA_DIR}/cloud.img "${IMG}"
 
-if [ ! -f "${DATA_DIR}/${INCR_IMG}" ]; then
+if [ ! -f "${DATA_DIR}/${IMG_INCR}" ]; then
 	  echo "Incr_image is not found. Must run a full first."
 	    exit
 fi
 
 # get incr and show sha512 hashs of copy and original.
 if [ ! -f "${IMG}" ]; then
-	  rsync -av ${DATA_DIR}/${INCR_IMG} ${IMG}
+	  rsync -av ${DATA_DIR}/${IMG_INCR} ${IMG}
 	    echo "SHA validation"
 	      cat ${DATA_DIR}/${FULL_RUN_SHA}
-	      #  sha256sum -b ${DATA_DIR}/${INCR_IMG}
+	      #  sha256sum -b ${DATA_DIR}/${IMG_INCR}
 	      #  sha256sum -b ${IMG}
 fi
 

@@ -8,17 +8,10 @@ include 'get_user_login.php';
 //session_start();
 $message="";
 
-$oSimpleLoginSystem = new SimpleLoginSystem();
-$sLoginForm = $oSimpleLoginSystem->getLoginBox();
+$oLoginSystem = new LoginSystem();
+$sLoginForm = $oLoginSystem->getLoginBox();
 echo strtr(file_get_contents('nothingpage.html'), array('{login_form}' => $sLoginForm));
-class SimpleLoginSystem {
-    var $aExistedMembers; // Existed members array
-    function SimpleLoginSystem() {
-        $this->aExistedMembers = array(
-            'User1' => 'd8578edf8458ce06fbc5bb76a58c5ca4',  //Sample: MD5('qwerty')
-            'User2' => 'd8578edf8458ce06fbc5bb76a58c5ca4'
-        );
-    }
+class LoginSystem {
     function getLoginBox() {
         ob_start();
         require_once('login_form.html');
@@ -32,7 +25,8 @@ class SimpleLoginSystem {
         }
         if ($_POST['username'] && $_POST['password']) {
             if ($this->check_login()) {
-                $this->simple_login($_POST['username'], $_POST['password']);
+		    $this->simple_login($_POST['username'], $_POST['password']);
+		    $_SESSION["ACPAGE"] = "main"; 
                 return $sLogoutForm . '<h2>Hello ' . $_COOKIE['member_name'] . '!</h2>';
             } else {
                 return $sLoginForm . '<h2>Username or Password is incorrect</h2>';
@@ -60,6 +54,7 @@ class SimpleLoginSystem {
         setcookie('member_pass', '', time() - 96 * 3600, '/');
         unset($_COOKIE['member_name']);
         unset($_COOKIE['member_pass']);
+	$_SESSION['ACPAGE'] = 'public';
     }
     function check_login() {
         if(count($_POST)>0) {
@@ -83,5 +78,20 @@ class SimpleLoginSystem {
         return false;
     }
 }
-require_once('frontpage.html');
+switch($_SESSION["ACPAGE"]) {
+   case "main":
+	require_once('main/index.php');
+	break;
+   case "logs":
+	require_once('logs/index.php');
+	break;
+   case "pipes":
+	require_once('pipe/index.php');
+	break;
+   case "status":
+	require_once('status/index.php');
+	break;
+   default:
+   	require_once('frontpage.html');
+   }
 ?>

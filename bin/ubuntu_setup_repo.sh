@@ -82,11 +82,6 @@ sudo cp -av archive.ubuntu.com  /var/www/html/ubuntu/mirror/
 #crontab -e
 #00  01  *  *  *  /usr/bin/apt-mirror
 
-exit
-# Enable Service
-systemctl enable xrdp
-systemctl start xrdp
-
 # Script Completed
 exit
 
